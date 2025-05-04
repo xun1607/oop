@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${product != null ? product.name + ' - Tiệm Bánh Ngon' : 'Chi tiết sản phẩm'}">Chi tiết sản phẩm</title>
+    <meta name="description" th:content="${product != null ? product.description : 'Thông tin chi tiết về sản phẩm bánh ngọt.'}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+</head>
+<body>
+
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container mt-4 mb-5 product-detail">
+        <div th:if="${product}">
+            <nav aria-label="breadcrumb" class="mb-3">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Trang Chủ</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/products}">Sản Phẩm</a></li>
+                <li class="breadcrumb-item" th:if="${product.category}"><a th:href="@{/products/category/{slug}(slug=${product.category.slug})}" th:text="${product.category.name}">Category</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">Product Name</li>
+              </ol>
+            </nav>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <img th:src="${product.imageUrl ?: '/img/placeholder.png'}" class="img-fluid product-detail-img" th:alt="${product.name}">
+                </div>
+
+                <div class="col-md-6">
+                    <h1 th:text="${product.name}">Product Name</h1>
+                    <p class="lead text-muted" th:if="${product.category}" th:text="${product.category.name}">Category Name</p>
+                    <h4 class="text-danger product-price mb-3" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">Price</h4>
+
+                    <hr>
+                    <h5>Mô tả sản phẩm</h5>
+                    <p th:text="${product.description}">Detailed product description goes here...</p>
+                    <hr>
+
+                    <!-- **MODIFIED:** Added CSRF token input -->
+                    <!-- Trong product/detail.html -->
+<!-- **KIỂM TRA VÀ ĐẢM BẢO CÓ method="post"** -->
+<form th:action="@{/cart/add}" method="post">
+    <input type="hidden" name="productId" th:value="${product.productId}" />
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+     <div class="mb-3">
+         <label for="quantity" class="form-label fw-bold">Số lượng:</label>
+         <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="10" style="width: 80px;" required>
+     </div>
+     <button type="submit" class="btn btn-success btn-lg shadow-sm">
+         <i class="bi bi-cart-plus-fill me-2"></i> Thêm vào giỏ hàng
+     </button>
+</form>
+
+                     <div class="mt-4">
+                         <a th:href="@{/products}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- This part is generally unreachable if using orElseThrow in the controller,
+             but kept for robustness or if error handling changes. -->
+        <div th:if="${product == null}" class="alert alert-warning text-center" role="alert">
+            <h2 class="alert-heading">Không tìm thấy sản phẩm!</h2>
+            <p>Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+            <hr>
+            <a th:href="@{/products}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

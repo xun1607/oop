@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <footer class="bg-light text-center text-lg-start mt-auto py-3" th:fragment="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Tiệm Bánh Ngon</h5>
+                    <p>
+                        Mang đến những chiếc bánh tươi ngon, chất lượng và đầy yêu thương.
+                    </p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Liên kết</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li><a th:href="@{/}" class="text-dark">Trang Chủ</a></li>
+                        <li><a th:href="@{/products}" class="text-dark">Sản Phẩm</a></li>
+                        <li><a href="#!" class="text-dark">Về Chúng Tôi</a></li>
+                        <li><a href="#!" class="text-dark">Liên Hệ</a></li>
+                    </ul>
+                </div>
+                 <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Liên hệ</h5>
+                     <ul class="list-unstyled">
+                         <li><i class="bi bi-geo-alt-fill"></i> 123 Đường ABC, Quận XYZ, TP HCM</li>
+                         <li><i class="bi bi-telephone-fill"></i> 09xx xxx xxx</li>
+                         <li><i class="bi bi-envelope-fill"></i> info@tiembanhngon.com</li>
+                     </ul>
+                 </div>
+            </div>
+        </div>
+        <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
+            © 2025 Copyright:
+            <a class="text-dark" href="#">Tiệm Bánh Ngon</a>
+        </div>
+    </footer>
+</body>
+</html>

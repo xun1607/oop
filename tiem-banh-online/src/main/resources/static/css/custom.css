@@ -1,0 +1,128 @@
+/* src/main/resources/static/css/custom.css */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto:wght@400;700&display=swap');
+
+/* --- General --- */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #fdfcfb;
+    color: #495057;
+    display: flex; /* For sticky footer */
+    flex-direction: column; /* For sticky footer */
+    min-height: 100vh; /* For sticky footer */
+}
+
+main {
+    flex-grow: 1; /* Allow main content to take available space */
+}
+
+a {
+    color: #D2691E; /* Default link color */
+    text-decoration: none;
+}
+a:hover {
+     color: #a0522d;
+     text-decoration: underline;
+}
+
+.product-link {
+    color: #343a40;
+    font-weight: 600;
+    text-decoration: none;
+}
+.product-link:hover {
+    color: #D2691E;
+ }
+
+.product-price {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* --- Navbar --- */
+.navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.navbar-brand { font-family: 'Pacifico', cursive; font-size: 1.6rem; color: #D2691E !important; }
+.navbar-light .navbar-nav .nav-link { color: #5C3D2E; }
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link.active { color: #D2691E; font-weight: bold; }
+
+/* --- Hero Section (Homepage) --- */
+.hero-section {
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    position: relative;
+    overflow: hidden;
+    z-index: 0;
+}
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+        url('https://img.freepik.com/premium-vector/bakery-handdrawn-stroke-background_701103-112.jpg') no-repeat center center;
+    background-size: cover;
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
+    transform: scale(1.05);
+}
+.hero-section > .container { position: relative; z-index: 1; }
+.hero-section h1 { font-family: 'Pacifico', cursive; font-size: 3.5rem; margin-bottom: 0.75rem; color: #fff; }
+.hero-section .lead { font-size: 1.3rem; margin-bottom: 1.75rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+.hero-section .btn-warning { background-color: #ff9f43; border-color: #ff9f43; color: #fff; padding: 0.9rem 2rem; font-weight: bold; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; border-radius: 50px; }
+.hero-section .btn-warning:hover { background-color: #e68a2e; border-color: #e68a2e; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+/* --- Product Cards --- */
+.product-card { transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out; overflow: hidden; border: 1px solid #eee !important; border-radius: 0.5rem; background-color: #fff; }
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important; }
+.product-card-img-wrapper { overflow: hidden; border-radius: 0.5rem 0.5rem 0 0; }
+.product-card-img { height: 220px; width: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.product-card:hover .product-card-img { transform: scale(1.05); }
+.product-card .card-body { padding: 1rem; }
+.product-card .btn-outline-primary { border-color: #FFB6C1; color: #d98199; border-radius: 50px; font-size: 0.9rem; padding: 0.4rem 1rem; transition: all 0.3s ease; }
+.product-card .btn-outline-primary:hover { background-color: #FFB6C1; color: white; border-color: #FFB6C1; }
+
+/* --- Product Detail --- */
+.product-detail-img { border-radius: 8px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 100%; height: auto; }
+.product-detail h1 { font-family: 'Pacifico', cursive; color: #a0522d; margin-bottom: 1rem; }
+.product-detail .product-price { font-size: 1.8rem; margin-bottom: 1.5rem; }
+.product-detail .btn-success { border-radius: 50px; padding: 0.8rem 1.8rem; font-size: 1.1rem; }
+
+/* --- Cart Page --- */
+.cart-update-form input[type=number] { text-align: center; }
+
+/* --- Login/Register Page --- */
+.login-container, .register-container { max-width: 450px; margin: 5rem auto; padding: 2.5rem; background-color: #fff; border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1); }
+.login-container .navbar-brand, .register-container .navbar-brand { font-family: 'Pacifico', cursive; font-size: 1.8rem; color: #D2691E !important; display: block; }
+
+/* --- Footer --- */
+footer { background-color: #f8f9fa; color: #6c757d; padding-top: 2rem; border-top: 1px solid #e9ecef; margin-top: auto; /* Important for sticky footer */ }
+footer a { color: #495057 !important; text-decoration: none; transition: color 0.2s ease; }
+footer a:hover { color: #D2691E !important; text-decoration: none; }
+footer .text-uppercase { font-weight: bold; color: #5C3D2E; margin-bottom: 1rem; font-size: 1rem; }
+footer .list-unstyled li { margin-bottom: 0.5rem; font-size: 0.9rem;}
+footer .bi { margin-right: 0.5rem; color: #D2691E; }
+.footer-bottom { background-color: #e9ecef; padding: 1rem 0; margin-top: 2rem; font-size: 0.9rem; }
+.footer-bottom a { color: #D2691E !important; font-weight: bold; }
+
+/* --- General Buttons --- */
+.btn { border-radius: 50px; /* Rounded buttons */ padding: 0.5rem 1.2rem; transition: all 0.3s ease; }
+.btn-sm { padding: 0.3rem 0.8rem; font-size: 0.85rem; }
+.btn-lg { padding: 0.8rem 1.8rem; font-size: 1.1rem; }
+.btn-primary { background-color: #FFB6C1; border-color: #FFB6C1; color: #fff; }
+.btn-primary:hover { background-color: #f7a0ae; border-color: #f7a0ae; color: #fff; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.btn-success { background-color: #5cb85c; border-color: #5cb85c; }
+.btn-success:hover { background-color: #4a9b4a; border-color: #4a9b4a; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.btn-outline-primary { border-color: #FFB6C1; color: #d98199; }
+.btn-outline-primary:hover { background-color: #FFB6C1; color: white; border-color: #FFB6C1; }
+.btn-outline-secondary { border-color: #adb5bd; color: #495057; }
+.btn-outline-secondary:hover { background-color: #adb5bd; color: #fff; }
+.btn-danger { border-radius: 50px; } /* Ensure delete button is rounded */
+.btn-link { text-decoration: none; }

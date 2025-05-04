@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- Kế thừa layout admin -->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/fragments/admin-layout}" lang="vi">
+<head>
+    <title>Danh Sách Đơn Hàng</title>
+</head>
+<body>
+    <!-- Nội dung chính -->
+    <div layout:fragment="content">
+        <h1 class="h3 mb-3">Quản Lý Đơn Hàng</h1>
+
+        <!-- Thông báo -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show small" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i><span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show small" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Bộ lọc theo trạng thái -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <form th:action="@{/admin/orders}" method="get" class="row g-2 align-items-end">
+                    <!-- Giữ lại các tham số phân trang/sắp xếp khi lọc -->
+                    <input type="hidden" name="size" th:value="${orderPage != null ? orderPage.size : 10}">
+                    <input type="hidden" name="sort" th:value="${sort}">
+                    <div class="col-md-4">
+                        <label for="statusFilter" class="form-label form-label-sm">Lọc theo trạng thái:</label>
+                        <select id="statusFilter" name="status" class="form-select form-select-sm">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <!-- Lấy danh sách trạng thái từ Model -->
+                            <option th:each="st : ${orderStatuses}"
+                                    th:value="${st}"
+                                    th:text="${st}"
+                                    th:selected="${st == statusFilter}"></option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">Lọc</button>
+                    </div>
+                     <div class="col-auto">
+                         <!-- Nút bỏ lọc quay về trang đầu -->
+                         <a th:href="@{/admin/orders(size=${orderPage != null ? orderPage.size : 10}, sort=${sort})}" class="btn btn-outline-secondary btn-sm">Bỏ lọc</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                 <div th:if="${orderPage == null or orderPage.empty}" class="alert alert-info mb-0">Không tìm thấy đơn hàng nào phù hợp.</div>
+
+                 <div class="table-responsive" th:unless="${orderPage == null or orderPage.empty}">
+                     <table class="table table-striped table-hover table-bordered align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <!-- Link sắp xếp -->
+                                <th><a class="text-dark fw-semibold text-decoration-none" th:href="@{/admin/orders(status=${statusFilter}, size=${orderPage.size}, sort='orderId,' + ${sortField == 'orderId' ? reverseSortDir : 'asc'})}">ID <i th:classappend="${sortField == 'orderId' ? 'bi-sort-' + (sortDir == 'ASC' ? 'up' : 'down') : 'bi-filter-left'}"></i></a></th>
+                                <th><a class="text-dark fw-semibold text-decoration-none" th:href="@{/admin/orders(status=${statusFilter}, size=${orderPage.size}, sort='orderCode,' + ${sortField == 'orderCode' ? reverseSortDir : 'asc'})}">Mã ĐH <i th:classappend="${sortField == 'orderCode' ? 'bi-sort-' + (sortDir == 'ASC' ? 'up' : 'down') : 'bi-filter-left'}"></i></a></th>
+                                <th><a class="text-dark fw-semibold text-decoration-none" th:href="@{/admin/orders(status=${statusFilter}, size=${orderPage.size}, sort='createdAt,' + ${sortField == 'createdAt' ? reverseSortDir : 'asc'})}">Ngày Tạo <i th:classappend="${sortField == 'createdAt' ? 'bi-sort-' + (sortDir == 'ASC' ? 'up' : 'down') : 'bi-filter-left'}"></i></a></th>
+                                <th>Khách Hàng</th>
+                                <th>Người Nhận</th>
+                                <th class="text-end">Tổng Tiền</th>
+                                <th><a class="text-dark fw-semibold text-decoration-none" th:href="@{/admin/orders(status=${statusFilter}, size=${orderPage.size}, sort='status,' + ${sortField == 'status' ? reverseSortDir : 'asc'})}">Trạng Thái <i th:classappend="${sortField == 'status' ? 'bi-sort-' + (sortDir == 'ASC' ? 'up' : 'down') : 'bi-filter-left'}"></i></a></th>
+                                <th>TT Thanh Toán</th>
+                                <th class="text-center">Chi Tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orderPage.content}">
+                                <td th:text="${order.orderId}">1</td>
+                                <td class="text-nowrap" th:text="${order.orderCode}">HD-123</td>
+                                <td class="text-nowrap" th:text="${#temporals.format(order.createdAt, 'dd/MM/yy HH:mm')}">Date</td>
+                                <td th:text="${order.user?.email ?: '(Khách vãng lai)'}">Customer</td>
+                                <td th:text="${order.recipientName}">Recipient</td>
+                                <td class="text-end fw-bold text-nowrap" th:text="${#numbers.formatDecimal(order.finalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Amount</td>
+                                <td class="text-nowrap"><span th:text="${order.status}" th:classappend="'badge rounded-pill text-bg-' + ${order.status == 'PENDING' ? 'warning' : (order.status == 'PROCESSING' ? 'info' : (order.status == 'SHIPPED' ? 'primary' : (order.status == 'DELIVERED' ? 'success' : (order.status == 'CANCELLED' ? 'danger' : 'secondary'))))}">Status</span></td>
+                                <td class="text-nowrap"><span th:text="${order.paymentStatus}" th:classappend="'badge rounded-pill text-bg-' + ${order.paymentStatus == 'PAID' ? 'success' : (order.paymentStatus == 'UNPAID' ? 'warning' : 'secondary')}">Payment Status</span></td>
+                                <td class="text-center">
+                                    <a th:href="@{/admin/orders/{id}(id=${order.orderId})}" class="btn btn-sm btn-outline-info py-0 px-1" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                 </div><!-- end table-responsive -->
+
+                <!-- Phân trang -->
+                 <nav aria-label="Order navigation" th:if="${orderPage != null and orderPage.totalPages > 1}">
+                    <ul class="pagination pagination-sm justify-content-center mt-3">
+                        <li class="page-item" th:classappend="${orderPage.first} ? 'disabled'"><a class="page-link" th:href="@{/admin/orders(status=${statusFilter}, page=${orderPage.number - 1}, size=${orderPage.size}, sort=${sort})}">«</a></li>
+                        <!-- Hiển thị số trang -->
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, orderPage.totalPages - 1)}" th:classappend="${i == orderPage.number} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/orders(status=${statusFilter}, page=${i}, size=${orderPage.size}, sort=${sort})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${orderPage.last} ? 'disabled'"><a class="page-link" th:href="@{/admin/orders(status=${statusFilter}, page=${orderPage.number + 1}, size=${orderPage.size}, sort=${sort})}">»</a></li>
+                    </ul>
+                </nav>
+                 </div> <!-- end unless empty -->
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div><!-- end layout fragment -->
+</body>
+</html>
