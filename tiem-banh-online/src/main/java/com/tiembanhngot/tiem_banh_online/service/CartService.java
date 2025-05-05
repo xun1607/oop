@@ -9,77 +9,137 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-// Import Map thay vì List
+import org.springframework.transaction.annotation.Transactional; // Optional, nếu có thao tác DB phức tạp hơn
+
 import java.math.BigDecimal;
-import java.util.Map;
+import java.util.Map; // Sử dụng Map
+import java.util.LinkedHashMap; // Để giữ thứ tự
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CartService {
 
-    private static final String CART_SESSION_KEY = "shoppingCart";
+    private static final String CART_SESSION_KEY = "shoppingCart"; // Key để lưu cart trong session
     private final ProductRepository productRepository;
 
     /**
-     * Lấy giỏ hàng từ HttpSession. Nếu chưa có, tạo mới và lưu vào session.
+     * Lấy giỏ hàng từ HttpSession.
+     * Nếu chưa có, tạo mới một giỏ hàng rỗng (với totalAmount = 0) và lưu vào session.
+     * Đảm bảo luôn trả về một đối tượng CartDTO hợp lệ, không bao giờ null.
+     *
+     * @param session HttpSession hiện tại.
+     * @return CartDTO từ session hoặc một CartDTO mới nếu chưa tồn tại.
      */
     public CartDTO getCart(HttpSession session) {
-        CartDTO cart = (CartDTO) session.getAttribute(CART_SESSION_KEY);
+        // Cẩn thận: Luôn kiểm tra kiểu dữ liệu khi lấy từ session
+        Object cartObject = session.getAttribute(CART_SESSION_KEY);
+        CartDTO cart = null;
+
+        if (cartObject instanceof CartDTO) {
+            cart = (CartDTO) cartObject;
+            log.trace("Cart found in session [ID: {}]. Items: {}", session.getId(), cart.getTotalItems());
+             // Đảm bảo các thành phần cốt lõi không null nếu cart đã tồn tại
+            if (cart.getItems() == null) {
+                log.warn("Cart found in session but items map is null. Initializing.");
+                cart.setItems(new LinkedHashMap<>());
+            }
+            if (cart.getTotalAmount() == null) {
+                 log.warn("Cart found in session but totalAmount is null. Initializing to ZERO.");
+                 cart.setTotalAmount(BigDecimal.ZERO);
+            }
+        }
+
         if (cart == null) {
-            log.debug("Creating new cart for session ID: {}", session.getId());
+            log.info("No cart found in session [ID: {}]. Creating a new cart.", session.getId());
             cart = new CartDTO();
+            // Khởi tạo các giá trị mặc định quan trọng để tránh NullPointerException sau này
+            cart.setItems(new LinkedHashMap<>()); // Dùng LinkedHashMap để giữ thứ tự thêm vào
+            cart.setTotalAmount(BigDecimal.ZERO);
+            cart.setTotalItems(0);
             session.setAttribute(CART_SESSION_KEY, cart);
+            log.debug("New empty cart created and stored in session [ID: {}].", session.getId());
         }
         return cart;
     }
 
     /**
      * Thêm sản phẩm vào giỏ hàng hoặc cập nhật số lượng nếu đã tồn tại.
+     * Tự động tính toán lại tổng tiền sau khi thêm/cập nhật.
+     *
+     * @param productId ID của sản phẩm cần thêm.
+     * @param quantity Số lượng cần thêm (phải lớn hơn 0).
+     * @param session HttpSession hiện tại.
+     * @throws ProductNotFoundException Nếu không tìm thấy sản phẩm với ID cung cấp.
+     * @throws IllegalArgumentException Nếu sản phẩm không có sẵn hoặc số lượng không hợp lệ.
      */
+    @Transactional(readOnly = true) // Chỉ đọc product, không thay đổi DB ở đây
     public void addToCart(Long productId, int quantity, HttpSession session) {
         if (quantity <= 0) {
-            log.warn("Attempted to add non-positive quantity ({}) for product ID: {}", quantity, productId);
-            return;
+            log.warn("Attempted to add non-positive quantity ({}) for product ID: {}. Ignoring.", quantity, productId);
+            throw new IllegalArgumentException("Số lượng phải lớn hơn 0."); // Ném lỗi để controller xử lý
         }
 
-        CartDTO cart = getCart(session);
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Cannot add to cart. Product not found with ID: " + productId));
+        CartDTO cart = getCart(session); // Lấy cart (sẽ tạo mới nếu chưa có)
 
-        if (!product.getIsAvailable()) {
-             log.warn("Attempted to add unavailable product ID: {}", productId);
+        // Lấy thông tin sản phẩm từ DB
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+
+        // Kiểm tra sản phẩm có sẵn không
+        if (!Boolean.TRUE.equals(product.getIsAvailable())) { // Cách kiểm tra Boolean an toàn với null
+             log.warn("Attempted to add unavailable product ID: {} ('{}') to cart.", productId, product.getName());
              throw new IllegalArgumentException("Sản phẩm '" + product.getName() + "' hiện không có sẵn.");
         }
+        // Kiểm tra giá có null không (quan trọng)
+         if (product.getPrice() == null) {
+              log.error("Product ID: {} ('{}') has a NULL price. Cannot add to cart.", productId, product.getName());
+              throw new IllegalStateException("Sản phẩm '" + product.getName() + "' đang gặp lỗi về giá. Vui lòng liên hệ hỗ trợ.");
+         }
+
 
         CartItemDTO existingItem = cart.getItems().get(productId);
 
         if (existingItem != null) {
             // Sản phẩm đã có, cập nhật số lượng
-            log.debug("Updating quantity for product ID {} in cart. Old quantity: {}, Add quantity: {}", productId, existingItem.getQuantity(), quantity);
+            log.debug("Updating quantity for existing product ID {} in cart [Session: {}]. Old quantity: {}, Add quantity: {}",
+                      productId, session.getId(), existingItem.getQuantity(), quantity);
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
         } else {
             // Sản phẩm mới, thêm vào giỏ
-            log.debug("Adding new product ID {} to cart with quantity: {}", productId, quantity);
-            CartItemDTO newItem = new CartItemDTO();
-            newItem.setProductId(product.getProductId());
-            newItem.setName(product.getName());
-            newItem.setImageUrl(product.getImageUrl());
-            newItem.setPrice(product.getPrice()); // Lấy giá hiện tại
-            newItem.setQuantity(quantity);
-            newItem.setSlug(product.getSlug()); // Lưu slug
+            log.debug("Adding new product ID {} to cart [Session: {}] with quantity: {}", productId, session.getId(), quantity);
+            CartItemDTO newItem = new CartItemDTO(
+                product.getProductId(),
+                product.getName(),
+                product.getImageUrl(),
+                product.getPrice(), // Lấy giá hiện tại từ DB
+                quantity,
+                BigDecimal.ZERO, // LineTotal sẽ được tính trong updateCartTotals
+                product.getSlug() // Lưu slug để tạo link
+            );
             cart.getItems().put(productId, newItem);
         }
 
+        // Tính toán lại tổng tiền và số lượng
         updateCartTotals(cart);
-        log.info("Cart updated for session ID: {}. Total items: {}, Total amount: {}", session.getId(), cart.getTotalItems(), cart.getTotalAmount());
-        // Session attribute tự động cập nhật vì ta sửa đổi object cart lấy từ session
-        // session.setAttribute(CART_SESSION_KEY, cart); // Không cần thiết nếu object cart được sửa trực tiếp
+
+        log.info("Cart updated after adding/updating product ID {}. Session ID: {}. Total items: {}, Total amount: {}",
+                 productId, session.getId(), cart.getTotalItems(), cart.getTotalAmount());
+
+        // Lưu ý: Không cần gọi session.setAttribute() lần nữa nếu bạn chỉ sửa đổi
+        // các thuộc tính của đối tượng `cart` đã lấy từ session.
+        // Tuy nhiên, nếu bạn tạo đối tượng cart mới hoàn toàn trong logic nào đó (ít gặp),
+        // bạn sẽ cần gọi session.setAttribute().
     }
 
     /**
      * Cập nhật số lượng của một sản phẩm trong giỏ hàng.
-     * Nếu số lượng <= 0, sản phẩm sẽ bị xóa.
+     * Nếu số lượng <= 0, sản phẩm sẽ bị xóa khỏi giỏ.
+     *
+     * @param productId ID của sản phẩm cần cập nhật.
+     * @param quantity Số lượng mới (nếu <= 0 sẽ xóa).
+     * @param session HttpSession hiện tại.
      */
     public void updateQuantity(Long productId, int quantity, HttpSession session) {
         CartDTO cart = getCart(session);
@@ -87,74 +147,146 @@ public class CartService {
 
         if (item != null) {
             if (quantity > 0) {
-                log.debug("Updating quantity for product ID {} to {}.", productId, quantity);
+                log.debug("Updating quantity for product ID {} in cart [Session: {}] to {}.", productId, session.getId(), quantity);
                 item.setQuantity(quantity);
             } else {
                 // Số lượng <= 0, xóa sản phẩm
-                log.debug("Removing product ID {} due to zero/negative quantity update.", productId);
+                log.debug("Quantity for product ID {} is <= 0. Removing item from cart [Session: {}].", productId, session.getId());
                 cart.getItems().remove(productId);
             }
+            // Tính toán lại tổng tiền và số lượng
             updateCartTotals(cart);
-             log.info("Cart updated (quantity change) for session ID: {}. Total items: {}, Total amount: {}", session.getId(), cart.getTotalItems(), cart.getTotalAmount());
+            log.info("Cart updated after quantity change for product ID {}. Session ID: {}. Total items: {}, Total amount: {}",
+                      productId, session.getId(), cart.getTotalItems(), cart.getTotalAmount());
         } else {
-             log.warn("Attempted to update quantity for non-existent product ID {} in cart.", productId);
+             log.warn("Attempted to update quantity for non-existent product ID {} in cart [Session: {}].", productId, session.getId());
+             // Có thể ném exception nếu muốn báo lỗi rõ ràng hơn
+             // throw new IllegalArgumentException("Sản phẩm không tồn tại trong giỏ hàng để cập nhật.");
         }
     }
 
     /**
      * Xóa một sản phẩm khỏi giỏ hàng.
+     *
+     * @param productId ID của sản phẩm cần xóa.
+     * @param session HttpSession hiện tại.
      */
     public void removeItem(Long productId, HttpSession session) {
         CartDTO cart = getCart(session);
+        log.debug("Attempting to remove product ID {} from cart [Session: {}].", productId, session.getId());
+
         CartItemDTO removedItem = cart.getItems().remove(productId);
 
         if (removedItem != null) {
-            log.debug("Removed product ID {} from cart.", productId);
+            log.debug("Successfully removed product ID {} from cart.", productId);
+            // Tính toán lại tổng tiền và số lượng
             updateCartTotals(cart);
-             log.info("Cart updated (item removed) for session ID: {}. Total items: {}, Total amount: {}", session.getId(), cart.getTotalItems(), cart.getTotalAmount());
+             log.info("Cart updated after removing product ID {}. Session ID: {}. Total items: {}, Total amount: {}",
+                      productId, session.getId(), cart.getTotalItems(), cart.getTotalAmount());
         } else {
-            log.warn("Attempted to remove non-existent product ID {} from cart.", productId);
+            log.warn("Attempted to remove non-existent product ID {} from cart [Session: {}].", productId, session.getId());
+             // Có thể ném exception nếu muốn
+             // throw new IllegalArgumentException("Sản phẩm không tồn tại trong giỏ hàng để xóa.");
         }
     }
 
     /**
-     * Lấy tổng số lượng các sản phẩm trong giỏ.
+     * Xóa tất cả sản phẩm khỏi giỏ hàng bằng cách xóa attribute khỏi session.
+     *
+     * @param session HttpSession hiện tại.
+     */
+    public void clearCart(HttpSession session) {
+        log.info("Attempting to clear cart for session ID: {}", session.getId());
+        if (session.getAttribute(CART_SESSION_KEY) != null) {
+            session.removeAttribute(CART_SESSION_KEY);
+            log.info("Cart attribute '{}' removed successfully for session ID: {}.", CART_SESSION_KEY, session.getId());
+            // Kiểm tra lại để chắc chắn
+            if (session.getAttribute(CART_SESSION_KEY) == null) {
+                 log.debug("Confirmed: Cart attribute '{}' is null after removal.", CART_SESSION_KEY);
+            } else {
+                 log.error("CRITICAL: Cart attribute '{}' STILL EXISTS after attempting removal for session ID: {}!", CART_SESSION_KEY, session.getId());
+            }
+        } else {
+            log.warn("No cart attribute '{}' found in session ID {} to clear.", CART_SESSION_KEY, session.getId());
+        }
+    }
+
+    /**
+     * Lấy tổng số lượng các mặt hàng (tính cả số lượng của từng mặt hàng) trong giỏ.
+     *
+     * @param session HttpSession hiện tại.
+     * @return Tổng số lượng items.
      */
      public int getCartItemCount(HttpSession session) {
+         // Lấy cart và trả về totalItems đã được tính toán
          return getCart(session).getTotalItems();
      }
 
     /**
      * Lấy tổng giá trị tiền của giỏ hàng.
+     *
+     * @param session HttpSession hiện tại.
+     * @return Tổng tiền (BigDecimal).
      */
     public BigDecimal getCartTotal(HttpSession session) {
+        // Lấy cart và trả về totalAmount đã được tính toán
+        // Đảm bảo getCart luôn trả về cart hợp lệ với totalAmount không null
         return getCart(session).getTotalAmount();
     }
 
-    /**
-     * Xóa tất cả sản phẩm khỏi giỏ hàng.
-     */
-    public void clearCart(HttpSession session) {
-        log.info("Clearing cart for session ID: {}", session.getId());
-        session.removeAttribute(CART_SESSION_KEY);
-    }
 
     /**
-     * Tính toán lại tổng tiền và tổng số lượng item trong giỏ hàng.
+     * Tính toán lại tổng tiền (totalAmount) và tổng số lượng item (totalItems) trong giỏ hàng.
+     * Cập nhật trực tiếp các thuộc tính của đối tượng CartDTO được truyền vào.
+     * Đảm bảo totalAmount luôn là BigDecimal.ZERO nếu không có item hoặc có lỗi.
+     *
+     * @param cart Đối tượng CartDTO cần được tính toán lại.
      */
     private void updateCartTotals(CartDTO cart) {
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        int totalItems = 0;
-        for (CartItemDTO item : cart.getItems().values()) { // Lặp qua values của Map
-            // Tính thành tiền cho từng dòng
-            item.setLineTotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-            // Cộng dồn tổng tiền
-            totalAmount = totalAmount.add(item.getLineTotal());
-            // Cộng dồn tổng số lượng
-            totalItems += item.getQuantity();
+        if (cart == null) {
+            log.error("Cannot update totals for a null cart.");
+            return;
         }
-        cart.setTotalAmount(totalAmount);
-        cart.setTotalItems(totalItems);
-        log.trace("Recalculated cart totals: Items={}, Amount={}", totalItems, totalAmount);
+        log.debug("Recalculating totals for cart...");
+
+        // LUÔN KHỞI TẠO BẰNG ZERO ĐỂ TRÁNH NULL
+        BigDecimal calculatedTotalAmount = BigDecimal.ZERO;
+        int calculatedTotalItems = 0;
+
+        // Kiểm tra items map có null không
+        if (cart.getItems() != null) {
+            for (CartItemDTO item : cart.getItems().values()) {
+                // Kiểm tra null cho giá và số lượng hợp lệ trước khi tính
+                if (item != null && item.getPrice() != null && item.getQuantity() > 0) {
+                    try {
+                        // Tính thành tiền cho từng dòng
+                        BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                        item.setLineTotal(lineTotal);
+                        // Cộng dồn tổng tiền
+                        calculatedTotalAmount = calculatedTotalAmount.add(lineTotal);
+                        // Cộng dồn tổng số lượng
+                        calculatedTotalItems += item.getQuantity();
+                    } catch (ArithmeticException e) {
+                         log.error("ArithmeticException during line total calculation for item productId: {}. Price: {}, Quantity: {}",
+                                   item.getProductId(), item.getPrice(), item.getQuantity(), e);
+                         // Quyết định xử lý: có thể bỏ qua item lỗi hoặc đặt giá trị mặc định
+                         item.setLineTotal(BigDecimal.ZERO); // Đặt là 0 nếu lỗi
+                    }
+                } else {
+                    log.warn("Skipping item total calculation: Item is null, price is null, or quantity is not positive. Item: {}", item);
+                    if (item != null) {
+                         item.setLineTotal(BigDecimal.ZERO); // Đặt là 0 nếu không tính được
+                    }
+                }
+            }
+        } else {
+            log.warn("Cart items map is null. Totals will be zero.");
+        }
+
+        // LUÔN CẬP NHẬT GIÁ TRỊ VÀO CART, kể cả khi là zero
+        cart.setTotalAmount(calculatedTotalAmount);
+        cart.setTotalItems(calculatedTotalItems);
+
+        log.info("Cart totals recalculated: Items={}, Amount={}", cart.getTotalItems(), cart.getTotalAmount());
     }
 }

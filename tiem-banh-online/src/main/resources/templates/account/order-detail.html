@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}" lang="vi">
+<head>
+    <!-- Đặt title động dựa vào mã đơn hàng -->
+    <title th:if="${order != null}" th:text="'Chi Tiết Đơn Hàng #' + ${order.orderCode}"></title>
+    <title th:unless="${order != null}">Không Tìm Thấy Đơn Hàng</title>
+    <style>
+        /* CSS bổ sung nếu cần */
+        .order-item-img {
+            max-width: 60px;
+            height: 60px;
+            object-fit: cover;
+        }
+        .detail-label {
+            font-weight: 500;
+            color: #6c757d; /* Màu xám nhẹ */
+            min-width: 130px; /* Đảm bảo các label thẳng hàng */
+            display: inline-block;
+        }
+        .currency::after {
+             content: ' ₫';
+             margin-left: 2px;
+        }
+        .card-header {
+             background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Nội dung chính của trang -->
+    <div layout:fragment="content">
+        <div class="container mt-4 mb-5">
+
+             <!-- Breadcrumb hoặc tiêu đề -->
+             <nav aria-label="breadcrumb" class="mb-3" th:if="${order != null}">
+                 <ol class="breadcrumb">
+                     <li class="breadcrumb-item"><a th:href="@{/}">Trang Chủ</a></li>
+                     <li class="breadcrumb-item"><a th:href="@{/account}">Tài Khoản</a></li>
+                     <li class="breadcrumb-item"><a th:href="@{/account/orders}">Lịch Sử Đơn Hàng</a></li>
+                     <li class="breadcrumb-item active" aria-current="page" th:text="'Chi Tiết ĐH #' + ${order.orderCode}">Chi Tiết ĐH</li>
+                 </ol>
+             </nav>
+            <h1 class="h3 mb-4" th:if="${order != null}" th:text="'Chi Tiết Đơn Hàng #' + ${order.orderCode}">Chi Tiết Đơn Hàng</h1>
+             <h1 class="h3 mb-4" th:unless="${order != null}">Không Tìm Thấy Đơn Hàng</h1>
+
+
+            <!-- Hiển thị thông báo nếu không tìm thấy đơn hàng -->
+            <div th:if="${order == null}" class="alert alert-warning" role="alert">
+                Đơn hàng bạn yêu cầu không tồn tại hoặc bạn không có quyền xem nó.
+                 <a th:href="@{/account/orders}" class="alert-link">Quay lại lịch sử đơn hàng</a>.
+            </div>
+
+            <!-- Hiển thị chi tiết nếu tìm thấy đơn hàng -->
+            <div class="row g-4" th:if="${order != null}">
+
+                <!-- Cột trái: Thông tin chung và giao hàng -->
+                <div class="col-lg-4">
+                    <!-- Card Thông tin đơn hàng -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header fw-bold">Thông Tin Đơn Hàng</div>
+                        <div class="card-body small">
+                            <p><span class="detail-label">Mã đơn hàng:</span> <strong th:text="${order.orderCode}"></strong></p>
+                            <p><span class="detail-label">Ngày đặt hàng:</span> <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></span></p>
+                            <p><span class="detail-label">Trạng thái ĐH:</span>
+                                <span th:text="${order.status}"
+                                      th:classappend="'badge rounded-pill text-bg-' + ${order.status == 'PENDING' ? 'warning' : (order.status == 'PROCESSING' ? 'info' : (order.status == 'SHIPPED' ? 'primary' : (order.status == 'DELIVERED' ? 'success' : (order.status == 'CANCELLED' ? 'danger' : 'secondary'))))}">
+                                </span>
+                            </p>
+                             <p><span class="detail-label">Phương thức TT:</span> <span th:text="${order.paymentMethod}"></span></p>
+                             <p><span class="detail-label">Trạng thái TT:</span>
+                                 <span th:text="${order.paymentStatus}"
+                                       th:classappend="'badge rounded-pill text-bg-' + ${order.paymentStatus == 'PAID' ? 'success' : (order.paymentStatus == 'UNPAID' ? 'warning' : 'secondary')}">
+                                 </span>
+                             </p>
+                        </div>
+                    </div>
+
+                    <!-- Card Thông tin giao hàng -->
+                    <div class="card shadow-sm">
+                        <div class="card-header fw-bold">Thông Tin Giao Hàng</div>
+                        <div class="card-body small">
+                             <p><span class="detail-label">Người nhận:</span> <strong th:text="${order.recipientName}"></strong></p>
+                             <p><span class="detail-label">Số điện thoại:</span> <span th:text="${order.recipientPhone}"></span></p>
+                             <p class="mb-2"><span class="detail-label">Địa chỉ giao:</span></p>
+                             <p class="ms-2" th:text="${order.shippingAddress}"></p>
+                            <p th:if="${order.notes != null and !order.notes.isEmpty()}">
+                                <span class="detail-label">Ghi chú:</span>
+                                <span class:text="${order.notes}"></span>
+                            </p>
+                             <p th:if="${order.notes == null or order.notes.isEmpty()}">
+                                <span class="detail-label">Ghi chú:</span>
+                                <span>(Không có)</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Chi tiết sản phẩm và tổng tiền -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header fw-bold">Chi Tiết Sản Phẩm</div>
+                        <div class="card-body p-0"> <!-- Padding 0 để table sát viền card -->
+                             <div class="table-responsive">
+                                 <table class="table table-hover align-middle mb-0 small"> <!-- mb-0 để xóa margin bottom của table -->
+                                     <thead class="table-light">
+                                         <tr>
+                                             <th scope="col" style="width:50%">Sản phẩm</th>
+                                             <th scope="col" class="text-end" style="width:20%">Đơn giá (lúc mua)</th>
+                                             <th scope="col" class="text-center" style="width:10%">Số lượng</th>
+                                             <th scope="col" class="text-end" style="width:20%">Thành tiền</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody>
+                                         <!-- Lặp qua các item trong đơn hàng -->
+                                         <tr th:each="item : ${order.orderItems}">
+                                             <td>
+                                                 <div class="d-flex align-items-center">
+                                                      <img th:src="@{${item.product?.imageUrl ?: '/img/placeholder.png'}}"
+                                                           th:alt="${item.product?.name}"
+                                                           class="img-thumbnail me-3 order-item-img">
+                                                      <div>
+                                                          <!-- Link đến sản phẩm nếu còn tồn tại -->
+                                                           <a th:if="${item.product != null}"
+                                                              th:href="@{/products/{slug}(slug=${item.product.slug})}"
+                                                              th:text="${item.product.name}"
+                                                              class="fw-medium text-decoration-none product-link"></a>
+                                                           <span th:unless="${item.product != null}" class="text-muted fst-italic">(Sản phẩm không còn tồn tại)</span>
+                                                          <!-- Có thể thêm size nếu có -->
+                                                          <!-- <small class="d-block text-muted" th:if="${item.sizeAtPurchase}" th:text="'Size: ' + ${item.sizeAtPurchase}"></small> -->
+                                                      </div>
+                                                 </div>
+                                             </td>
+                                             <td class="text-end text-nowrap">
+                                                 <span class="currency" th:if="${item.priceAtPurchase != null}" th:text="${#numbers.formatDecimal(item.priceAtPurchase, 0, 'COMMA', 0, 'POINT')}"></span>
+                                                  <span th:unless="${item.priceAtPurchase != null}" class="text-danger">Lỗi</span>
+                                             </td>
+                                             <td class="text-center" th:text="${item.quantity}"></td>
+                                             <td class="text-end fw-bold text-nowrap">
+                                                  <span class="currency"
+                                                        th:if="${item.priceAtPurchase != null and item.quantity != null}"
+                                                        th:text="${#numbers.formatDecimal(item.priceAtPurchase.multiply(T(java.math.BigDecimal).valueOf(item.quantity)), 0, 'COMMA', 0, 'POINT')}">
+                                                  </span>
+                                                   <span th:unless="${item.priceAtPurchase != null and item.quantity != null}" class="text-danger">Lỗi</span>
+                                             </td>
+                                         </tr>
+                                     </tbody>
+                                 </table>
+                             </div>
+                        </div><!-- end card-body -->
+                        <!-- Footer của Card để tính tổng -->
+                        <div class="card-footer bg-light">
+                             <div class="row justify-content-end">
+                                 <div class="col-md-7 col-lg-6">
+                                      <ul class="list-group list-group-flush small">
+                                         <li class="list-group-item d-flex justify-content-between ps-0 pe-0 border-0 bg-transparent">
+                                             <span>Tổng tiền hàng:</span>
+                                             <strong th:if="${order.totalAmount != null}" class="currency" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}"></strong>
+                                              <span th:unless="${order.totalAmount != null}" class="text-danger">Lỗi</span>
+                                         </li>
+                                         <li class="list-group-item d-flex justify-content-between ps-0 pe-0 border-0 bg-transparent">
+                                             <span>Phí vận chuyển:</span>
+                                             <strong th:if="${order.shippingFee != null}" class="currency" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')}"></strong>
+                                              <span th:unless="${order.shippingFee != null}" class="text-danger">Lỗi</span>
+                                         </li>
+                                         <li class="list-group-item d-flex justify-content-between fw-bold fs-6 ps-0 pe-0 border-0 bg-transparent mt-2 pt-2 border-top">
+                                             <span>Tổng Cộng:</span>
+                                             <span class="text-danger currency"
+                                                   th:if="${order.finalAmount != null}"
+                                                   th:text="${#numbers.formatDecimal(order.finalAmount, 0, 'COMMA', 0, 'POINT')}">
+                                               </span>
+                                              <span th:unless="${order.finalAmount != null}" class="text-danger">Lỗi</span>
+                                         </li>
+                                     </ul>
+                                 </div>
+                             </div>
+                        </div><!-- end card-footer -->
+                    </div><!-- end card -->
+
+                    <!-- Nút quay lại -->
+                    <div class="mt-4 text-center">
+                        <a th:href="@{/account/orders}" class="btn btn-outline-secondary">
+                             <i class="bi bi-arrow-left me-1"></i> Quay lại Lịch Sử Đơn Hàng
+                        </a>
+                    </div>
+
+                </div><!-- end col-lg-8 -->
+            </div><!-- end row -->
+        </div><!-- end container -->
+    </div><!-- end layout fragment -->
+
+    <!-- Script riêng nếu cần -->
+    <th:block layout:fragment="scripts">
+        <!-- <script>...</script> -->
+    </th:block>
+</body>
+</html>

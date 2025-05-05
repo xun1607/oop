@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- Khai báo các namespace cần thiết -->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <!--
+        layout:title-pattern="$CONTENT_TITLE - Tiệm Bánh Ngon":
+        Tự động tạo title dạng "Tên Trang Con - Tiệm Bánh Ngon".
+        Nếu trang con không đặt title, title mặc định sẽ là "Tiệm Bánh Ngon".
+    -->
+    <title layout:title-pattern="$CONTENT_TITLE - Tiệm Bánh Ngon">Tiệm Bánh Ngon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Link CSS Tùy chỉnh của bạn -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+
+    <!-- Block cho các trang con chèn CSS riêng (nếu cần) -->
+    <th:block layout:fragment="styles">
+        <!-- Ví dụ: <link rel="stylesheet" th:href="@{/css/trang-con-specific.css}"> -->
+    </th:block>
+</head>
+<!--
+    Các class d-flex, flex-column, min-vh-100 trên body
+    và flex-grow-1 trên main giúp tạo hiệu ứng sticky footer
+    (footer luôn nằm ở cuối trang, kể cả khi nội dung ngắn).
+-->
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- ===== HEADER ===== -->
+    <!-- Sử dụng th:replace để thay thế thẻ div này bằng nội dung của fragment 'header'
+         từ file 'fragments/header.html' -->
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <!-- flex-grow-1: Cho phép main chiếm hết không gian dọc còn lại, đẩy footer xuống -->
+    <main class="flex-grow-1">
+        <!--
+            layout:fragment="content": Đây là vị trí đánh dấu nơi nội dung
+            của fragment "content" từ các trang con (như index.html, product/list.html)
+            sẽ được chèn vào.
+        -->
+        <div layout:fragment="content">
+            <!-- Nội dung này chỉ hiển thị nếu trang con KHÔNG định nghĩa layout:fragment="content" -->
+            <div class="container text-center py-5">
+                <p>Nội dung trang sẽ được hiển thị ở đây.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <!-- Sử dụng th:replace để thay thế thẻ div này bằng nội dung của fragment 'footer'
+         từ file 'fragments/footer.html' -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <!-- Bootstrap JS Bundle (bao gồm Popper) - Đặt ở cuối body để trang tải nhanh hơn -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Block cho các trang con chèn JavaScript riêng (nếu cần) -->
+    <th:block layout:fragment="scripts">
+        <!-- Ví dụ: <script th:src="@{/js/trang-con-script.js}"></script> -->
+    </th:block>
+</body>
+</html>

@@ -52,8 +52,9 @@ public class AdminCategoryController {
         model.addAttribute("pageSize", size);
         model.addAttribute("sort", sort);
 
-        log.debug("Returning category list view with {} categories on page {}.", categoryPage.getNumberOfElements(), page);
-        return "admin/category/list"; // --> /templates/admin/category/list.html
+        model.addAttribute("currentPage", "categories"); // <-- THÊM DÒNG NÀY
+    log.debug("Returning category list view...");
+    return "admin/category/list";
     }
 
     // Hiển thị form thêm danh mục

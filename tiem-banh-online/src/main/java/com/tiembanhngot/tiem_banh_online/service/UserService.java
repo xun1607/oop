@@ -6,6 +6,9 @@ import com.tiembanhngot.tiem_banh_online.entity.User;
 import com.tiembanhngot.tiem_banh_online.repository.RoleRepository;
 import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.hibernate.query.Page;
 import org.springframework.security.crypto.password.PasswordEncoder; // **Import**
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +28,7 @@ public class UserService {
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-
+   
     @Transactional(readOnly = true)
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
@@ -62,5 +65,22 @@ public class UserService {
         return userRepository.save(newUser);
     }
 
+    // === THÊM PHƯƠNG THỨC NÀY ===
+    /**
+     * Lấy danh sách tất cả người dùng có phân trang và sắp xếp.
+     * @param pageable Đối tượng chứa thông tin phân trang và sắp xếp.
+     * @return Một trang (Page) chứa danh sách người dùng.
+     */
+    @Transactional(readOnly = true) // Chỉ đọc dữ liệu
+    public Page<User> findAllUsersPaginated(Pageable pageable) {
+        // Gọi phương thức findAll của JpaRepository để lấy dữ liệu phân trang
+        return userRepository.findAll(pageable);
+    }
+    // === KẾT THÚC PHẦN THÊM ===
+
     // Các phương thức khác nếu có...
+    // Ví dụ: đếm người dùng (cho dashboard)
+    // public long countTotalUsers() {
+    //     return userRepository.count();
+    // }
 }

@@ -1,12 +1,15 @@
-package com.tiembanhngot.tiem_banh_online.controller.admin; // Tạo package admin
+package com.tiembanhngot.tiem_banh_online.controller.admin;
 
 import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.service.CategoryService;
 import com.tiembanhngot.tiem_banh_online.service.ProductService;
-// import com.tiembanhngot.tiem_banh_online.service.StorageService; // Sẽ cần cho lưu file ảnh
+import com.tiembanhngot.tiem_banh_online.service.StorageService; // Import StorageService
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,118 +22,175 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/products")
-@PreAuthorize("hasRole('ADMIN')") // Chỉ Admin mới truy cập được các endpoint trong controller này
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminProductController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
-    // private final StorageService storageService; // Inject service xử lý lưu file
+    private final StorageService storageService; // **Inject StorageService**
 
-    @GetMapping
-    public String listProducts(@RequestParam(defaultValue = "0") int page,
-                               @RequestParam(defaultValue = "10") int size,
-                               @RequestParam(defaultValue = "productId,asc") String sort, // ví dụ: name,desc
-                               Model model) {
-        String[] sortParams = sort.split(",");
-        Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
-        Pageable pageable = PageRequest.of(page, size, sortOrder);
-        Page<Product> productPage = productService.findAllProductsPaginated(pageable); // Cần thêm method này vào ProductService
-
-        model.addAttribute("productPage", productPage);
-        model.addAttribute("sort", sort); // để giữ lại thông tin sort cho view
-        // Các thông tin khác cho phân trang nếu cần (totalPages, number...)
-        return "admin/product/list"; // -> /templates/admin/product/list.html
-    }
-
-    private void addCategoriesToModel(Model model) {
+    // Hàm tiện ích load Categories
+    private void loadCategories(Model model) {
         List<Category> categories = categoryService.findAllCategories();
         model.addAttribute("categories", categories);
     }
 
-    @GetMapping("/add")
-    public String showAddProductForm(Model model) {
-        model.addAttribute("product", new Product()); // Product rỗng cho form binding
-        addCategoriesToModel(model); // Thêm danh sách category vào model
-        model.addAttribute("pageTitle", "Thêm Sản Phẩm Mới");
-        return "admin/product/form"; // -> /templates/admin/product/form.html
+    // Hiển thị danh sách sản phẩm
+    @GetMapping
+    public String listProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "productId,asc") String sort,
+            Model model) {
+
+        log.info("Admin: Request received for product list: page={}, size={}, sort={}", page, size, sort);
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 ? Sort.Direction.fromString(sortParams[1]) : Sort.Direction.ASC;
+        String sortField = sortParams[0];
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+        Page<Product> productPage = productService.findAllProductsPaginated(pageable);
+
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", direction.name());
+        model.addAttribute("reverseSortDir", direction == Sort.Direction.ASC ? "desc" : "asc");
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sort", sort);
+
+        model.addAttribute("currentPage", "products"); // <-- THÊM DÒNG NÀY
+        log.debug("Admin: Returning product list view...");
+        return "admin/product/list";
     }
 
-    @GetMapping("/edit/{id}")
+    // Hiển thị form thêm
+    @GetMapping("/add")
+    public String showAddProductForm(Model model) {
+        log.debug("Admin: Request received for add product form.");
+        model.addAttribute("product", new Product());
+        loadCategories(model);
+        model.addAttribute("pageTitle", "Thêm Sản Phẩm Mới");
+        return "admin/product/form";
+    }
+
+    // Hiển thị form sửa
+     @GetMapping("/edit/{id}")
     public String showEditProductForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+        log.info("Admin: Request received to edit product with ID: {}", id);
         try {
             Product product = productService.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + id));
+                    .orElseThrow(() -> new ProductNotFoundException("Không tìm thấy sản phẩm với ID: " + id));
             model.addAttribute("product", product);
-            addCategoriesToModel(model);
+            loadCategories(model);
             model.addAttribute("pageTitle", "Chỉnh Sửa Sản Phẩm (ID: " + id + ")");
+            log.debug("Admin: Displaying edit form for product ID: {}", id);
             return "admin/product/form";
-        } catch (IllegalArgumentException e) {
+        } catch (ProductNotFoundException e) {
+            log.warn("Admin: Product not found for editing: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/admin/products";
         }
     }
 
+    // Xử lý lưu sản phẩm
     @PostMapping("/save")
-    public String saveProduct(@Valid @ModelAttribute("product") Product product, // Nhận Product trực tiếp hoặc tạo ProductDTO
+    public String saveProduct(@Valid @ModelAttribute("product") Product product,
                               BindingResult bindingResult,
-                              @RequestParam("imageFile") MultipartFile imageFile, // Nhận file ảnh upload
+                              @RequestParam("imageFile") MultipartFile imageFile,
+                              // Lấy ảnh cũ từ hidden input nếu là edit
+                              @RequestParam(value = "currentImageUrl", required = false) String currentImageUrl,
                               Model model,
                               RedirectAttributes redirectAttributes) {
 
+        boolean isNew = product.getProductId() == null;
+        log.info("Admin: Attempting to save {} product: {}", isNew ? "new" : "existing", product.getName());
+        String pageTitle = isNew ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")";
+        model.addAttribute("pageTitle", pageTitle); // Set lại title phòng khi lỗi
+
+        // Kiểm tra Category có được chọn không
+         if (product.getCategory() == null || product.getCategory().getCategoryId() == null) {
+              bindingResult.rejectValue("category", "NotEmpty.product.category", "Vui lòng chọn danh mục.");
+         }
+
         if (bindingResult.hasErrors()) {
-             addCategoriesToModel(model); // Cần load lại category khi có lỗi validation
-             model.addAttribute("pageTitle", product.getProductId() == null ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")");
-            return "admin/product/form"; // Trả về form nếu có lỗi
+            log.warn("Admin: Validation errors found for product {}: {}", product.getName(), bindingResult.getAllErrors());
+            loadCategories(model);
+            // Giữ lại ảnh cũ nếu là edit và có lỗi
+            if (!isNew) product.setImageUrl(currentImageUrl);
+            return "admin/product/form";
         }
 
-        // ----- Xử lý Upload File Ảnh -----
+        // Xử lý Upload Ảnh Mới (nếu có)
+        String newImageUrl = null; // Reset URL mới
         if (!imageFile.isEmpty()) {
             try {
-                // String savedFileName = storageService.store(imageFile); // Gọi service lưu file
-                // product.setImageUrl("/uploads/" + savedFileName); // Cập nhật đường dẫn ảnh mới (Ví dụ)
-                // --- TẠM THỜI CHƯA IMPLEMENT LƯU FILE ---
-                 product.setImageUrl("/img/placeholder.png"); // Hoặc giữ ảnh cũ nếu là edit và không up ảnh mới
-                 System.out.println("Received file: " + imageFile.getOriginalFilename()); // Log tạm
-            } catch (Exception e) {
+                log.debug("Admin: Processing uploaded file: {}", imageFile.getOriginalFilename());
+                String savedFileName = storageService.store(imageFile);
+                newImageUrl = "/uploads/" + savedFileName; // Đường dẫn URL sau khi lưu
+                product.setImageUrl(newImageUrl); // Gán URL mới cho product object
+                 log.info("Admin: New image saved as: {}, setting imageUrl.", savedFileName);
+            } catch (IOException e) {
+                log.error("Admin: Failed to store uploaded file for product {}: {}", product.getName(), e.getMessage());
+                // Thêm lỗi vào bindingResult để hiển thị trên form
                 bindingResult.rejectValue("imageUrl", "upload.error", "Lỗi khi tải ảnh lên: " + e.getMessage());
-                addCategoriesToModel(model);
-                model.addAttribute("pageTitle", product.getProductId() == null ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")");
+                loadCategories(model);
+                 if (!isNew) product.setImageUrl(currentImageUrl); // Giữ lại ảnh cũ
                 return "admin/product/form";
             }
-        } else if (product.getProductId() != null) {
-             // Nếu là edit và không upload ảnh mới, giữ lại ảnh cũ
-            productService.findById(product.getProductId()).ifPresent(existingProduct -> {
-                product.setImageUrl(existingProduct.getImageUrl());
-            });
+        } else {
+             product.setImageUrl(null); // Đặt là null nếu không có ảnh mới (Service sẽ xử lý giữ ảnh cũ)
         }
-        // ----- Kết thúc xử lý Upload -----
 
+
+        // Lưu sản phẩm vào DB (truyền cả ảnh cũ)
         try {
-            productService.saveProduct(product); // Cần thêm/sửa method này trong ProductService
-            redirectAttributes.addFlashAttribute("successMessage", "Đã lưu sản phẩm thành công!");
+            log.debug("Admin: Calling ProductService.saveProduct");
+            productService.saveProduct(product, isNew ? null : currentImageUrl); // Truyền oldImageUrl nếu là update
+            redirectAttributes.addFlashAttribute("successMessage", "Đã " + (isNew ? "thêm" : "cập nhật") + " sản phẩm thành công!");
+            log.info("Admin: Product {} successfully.", isNew ? "created" : "updated");
             return "redirect:/admin/products";
+        } catch (DataIntegrityViolationException e) {
+            log.error("Admin: Data integrity violation for product {}: {}", product.getName(), e.getMessage());
+            bindingResult.rejectValue("slug", "duplicate", e.getMessage()); // Thêm lỗi vào field slug (hoặc name)
+            loadCategories(model);
+            product.setImageUrl(newImageUrl != null ? newImageUrl : currentImageUrl); // Giữ lại URL ảnh đã xử lý
+            return "admin/product/form";
         } catch (Exception e) {
-             // Log lỗi e
-            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi lưu sản phẩm.");
-             addCategoriesToModel(model);
-             model.addAttribute("pageTitle", product.getProductId() == null ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")");
-            return "admin/product/form"; // Quay lại form với thông báo lỗi
+            log.error("Admin: Error saving product {}: {}", product.getName(), e);
+            model.addAttribute("errorMessage", "Lỗi khi lưu sản phẩm: " + e.getMessage()); // Thêm lỗi chung
+            loadCategories(model);
+             product.setImageUrl(newImageUrl != null ? newImageUrl : currentImageUrl); // Giữ lại URL ảnh đã xử lý
+            return "admin/product/form";
         }
     }
 
+    // Xử lý xóa sản phẩm
     @PostMapping("/delete/{id}")
     public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        log.info("Admin: Request received to delete product with ID: {}", id);
         try {
-            productService.deleteProductById(id); // Cần thêm method này vào ProductService
+            productService.deleteProductById(id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm ID: " + id);
+            log.info("Admin: Successfully deleted product ID: {}", id);
+        } catch (ProductNotFoundException e) {
+             log.warn("Admin: Attempted to delete non-existent product: {}", e.getMessage());
+             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+         catch (DataIntegrityViolationException e) { // Bắt lỗi ràng buộc (ví dụ: đơn hàng)
+            log.error("Admin: Cannot delete product ID: {} due to existing references.", id, e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage()); // Hiển thị lỗi từ service
         } catch (Exception e) {
-             // Log lỗi e
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa sản phẩm ID: " + id + ". " + e.getMessage());
+            log.error("Admin: Error deleting product ID: {}", id, e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi không mong muốn khi xóa sản phẩm ID: " + id);
         }
         return "redirect:/admin/products";
     }

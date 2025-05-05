@@ -19,7 +19,6 @@
                         <!-- **SỬA LẠI:** Dùng biến currentPage từ Model -->
                         <a class="nav-link" th:classappend="${currentPage == 'home' ? 'active' : ''}" aria-current="page" th:href="@{/}">Trang Chủ</a>
                     </li>
-                    <li class="nav-item">
                          <!-- **SỬA LẠI:** Dùng biến currentPage từ Model -->
                         <a class="nav-link" th:classappend="${currentPage == 'products' ? 'active' : ''}" th:href="@{/products}">Sản Phẩm</a>
                     </li>
@@ -51,10 +50,11 @@
                          </a>
                          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
                              <li><a class="dropdown-item" th:href="@{/account}"><i class="bi bi-person-lines-fill me-2"></i>Tài Khoản</a></li>
-                             <li><a class="dropdown-item" th:href="@{/orders}"><i class="bi bi-box-seam me-2"></i>Đơn Hàng</a></li>
-                             <li sec:authorize="hasRole('ADMIN')">
-                                 <a class="dropdown-item" th:href="@{/admin/products}"><i class="bi bi-gear-fill me-2"></i>Quản Lý</a>
-                             </li>
+                              <li><a class="dropdown-item" th:href="@{/account/orders}"><i class="bi bi-box-seam me-2"></i>Đơn Hàng</a></li>
+                              <li sec:authorize="hasRole('ADMIN')">
+                                <!-- === SỬA HREF Ở ĐÂY === -->
+                                <a class="dropdown-item" th:href="@{/admin/dashboard}"><i class="bi bi-gear-fill me-2"></i>Quản Lý</a>
+                            </li>
                              <li><hr class="dropdown-divider"></li>
                              <li>
                                  <form th:action="@{/logout}" method="post" class="d-inline">

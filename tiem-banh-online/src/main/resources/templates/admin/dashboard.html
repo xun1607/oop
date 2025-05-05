@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/fragments/admin-layout}" lang="vi">
+<head>
+    <title>Bảng Điều Khiển</title>
+     <style>
+        .dashboard-card { transition: transform 0.2s ease-in-out; }
+        .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+        .dashboard-card .card-body { display: flex; align-items: center; justify-content: space-between; }
+        .dashboard-card i.stat-icon { font-size: 2.5rem; opacity: 0.6; }
+        .dashboard-card .card-footer { background-color: rgba(0,0,0,0.1); border-top: none;}
+        .dashboard-card .card-footer:hover { background-color: rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h1 class="h2 mb-4">Bảng Điều Khiển</h1>
+
+        <div th:if="${statError}" class="alert alert-warning" role="alert" th:text="${statError}"></div>
+
+        <div class="row g-4">
+             <!-- Ví dụ các thẻ thống kê -->
+             <div class="col-md-6 col-xl-3">
+                <div class="card text-bg-primary text-white shadow-sm dashboard-card h-100">
+                    <div class="card-body">
+                        <div>
+                            <div class="fs-4 fw-bold" th:text="${totalProducts ?: 'N/A'}">0</div>
+                            <div class="small">Tổng Sản Phẩm</div>
+                        </div>
+                        <i class="bi bi-box-seam stat-icon"></i>
+                    </div>
+                     <a th:href="@{/admin/products}" class="card-footer text-white text-decoration-none small d-flex justify-content-between">
+                        <span>Xem chi tiết</span>
+                        <i class="bi bi-arrow-right-circle"></i>
+                    </a>
+                </div>
+            </div>
+             <div class="col-md-6 col-xl-3">
+                 <div class="card text-bg-warning text-dark shadow-sm dashboard-card h-100">
+                     <div class="card-body">
+                          <div>
+                             <div class="fs-4 fw-bold" th:text="${newOrdersCount ?: 'N/A'}">0</div>
+                             <div class="small">Đơn Hàng Mới (Pending)</div>
+                         </div>
+                          <i class="bi bi-receipt stat-icon"></i>
+                     </div>
+                     <a th:href="@{/admin/orders(status='PENDING')}" class="card-footer text-dark text-decoration-none small d-flex justify-content-between">
+                          <span>Xem chi tiết</span>
+                          <i class="bi bi-arrow-right-circle"></i>
+                     </a>
+                 </div>
+             </div>
+            <!-- Thêm các card khác nếu cần -->
+        </div><!-- end row -->
+         <div class="mt-5">
+             <h4>Chào mừng!</h4>
+             <p>Sử dụng thanh bên để điều hướng các mục quản lý.</p>
+         </div>
+    </div><!-- end layout fragment -->
+     <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

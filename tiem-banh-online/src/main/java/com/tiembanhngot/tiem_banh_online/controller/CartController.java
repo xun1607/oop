@@ -1,5 +1,5 @@
 package com.tiembanhngot.tiem_banh_online.controller;
-
+import org.springframework.web.bind.support.SessionStatus;
 import com.tiembanhngot.tiem_banh_online.dto.CartDTO;
 import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.service.CartService;
@@ -101,15 +101,18 @@ public class CartController {
 
     // Xử lý xóa toàn bộ giỏ hàng
     @PostMapping("/clear")
-    public String clearCart(HttpSession session, RedirectAttributes redirectAttributes) {
-        log.info("Received request to clear cart.");
+    public String clearCart(HttpSession session, RedirectAttributes redirectAttributes, SessionStatus status) { // Thêm SessionStatus
+        log.info("Received request to clear cart using SessionStatus.");
         try {
-             cartService.clearCart(session);
+             // Thay vì gọi cartService.clearCart(session);
+             status.setComplete(); // Đánh dấu session attribute được quản lý bởi @SessionAttributes là hoàn thành -> sẽ bị xóa khỏi session khi redirect
+             //session.removeAttribute(CART_SESSION_KEY); // Vẫn nên giữ lại để xóa trực tiếp phòng trường hợp @SessionAttributes không hoạt động như mong đợi
              redirectAttributes.addFlashAttribute("cartMessageSuccess", "Giỏ hàng đã được xóa.");
+             log.info("Cart marked as complete via SessionStatus and removed attribute directly.");
         } catch (Exception e) {
              log.error("Error clearing cart.", e);
              redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi khi xóa giỏ hàng.");
         }
-        return "redirect:/cart"; // Luôn redirect về trang giỏ hàng sau khi xóa
+        return "redirect:/cart";
     }
 }

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}" lang="vi"> <!-- Hoặc tên file layout đúng của bạn -->
+<head>
+    <title>Lịch Sử Đơn Hàng</title>
+     <!-- Thêm CSS nếu cần -->
+     <link rel="stylesheet" th:href="@{/css/account.css}">
+</head>
+<body>
+    <!-- Sử dụng layout chung hoặc tạo layout riêng cho trang account -->
+    <div layout:fragment="content">
+        <div class="container mt-4 mb-5">
+            <div class="row">
+                <!-- Sidebar tài khoản (Ví dụ) -->
+                <div class="col-md-3">
+                    <div class="list-group">
+                        <a th:href="@{/account}" class="list-group-item list-group-item-action">Thông tin tài khoản</a>
+                        <a th:href="@{/account/orders}" class="list-group-item list-group-item-action active" aria-current="true">Lịch sử đơn hàng</a>
+                        <a th:href="@{/account/address}" class="list-group-item list-group-item-action">Địa chỉ</a>
+                        <a th:href="@{/account/change-password}" class="list-group-item list-group-item-action">Đổi mật khẩu</a>
+                         <!-- Form Logout -->
+                         <form th:action="@{/logout}" method="post" class="list-group-item p-0">
+                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                             <button type="submit" class="list-group-item list-group-item-action list-group-item-danger border-0">Đăng xuất</button>
+                         </form>
+                    </div>
+                </div>
+
+                <!-- Nội dung chính: Lịch sử đơn hàng -->
+                <div class="col-md-9">
+                    <h2 class="mb-4">Lịch Sử Đơn Hàng</h2>
+
+                     <div th:if="${orderPage == null or orderPage.empty}" class="alert alert-info">
+                        Bạn chưa có đơn hàng nào.
+                    </div>
+
+                    <div class="table-responsive" th:unless="${orderPage == null or orderPage.empty}">
+                         <table class="table table-hover align-middle small border">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã ĐH</th>
+                                    <th>Ngày Đặt</th>
+                                    <th class="text-end">Tổng Tiền</th>
+                                    <th class="text-center">Trạng Thái ĐH</th>
+                                    <th class="text-center">Trạng Thái TT</th>
+                                    <th class="text-center">Chi Tiết</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${orderPage.content}">
+                                    <td class="fw-medium" th:text="${order.orderCode}">HD-123</td>
+                                    <td class="text-muted" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                    <td class="text-end fw-bold text-nowrap" th:text="${#numbers.formatDecimal(order.finalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Amount</td>
+                                    <td class="text-center text-nowrap"><span th:text="${order.status}" th:classappend="'badge rounded-pill text-bg-' + ${order.status == 'PENDING' ? 'warning' : (order.status == 'PROCESSING' ? 'info' : (order.status == 'SHIPPED' ? 'primary' : (order.status == 'DELIVERED' ? 'success' : (order.status == 'CANCELLED' ? 'danger' : 'secondary'))))}">Status</span></td>
+                                    <td class="text-center text-nowrap"><span th:text="${order.paymentStatus}" th:classappend="'badge rounded-pill text-bg-' + ${order.paymentStatus == 'PAID' ? 'success' : (order.paymentStatus == 'UNPAID' ? 'warning' : 'secondary')}">Payment Status</span></td>
+                                    <td class="text-center">
+                                        <a th:href="@{/account/orders/{orderId}(orderId=${order.orderId})}" class="btn btn-sm btn-outline-info py-0 px-1" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div><!-- end table-responsive -->
+
+                    <!-- Phân trang -->
+                     <nav aria-label="Order navigation" th:if="${orderPage != null and orderPage.totalPages > 1}">
+                        <ul class="pagination pagination-sm justify-content-center mt-4">
+                            <li class="page-item" th:classappend="${orderPage.first} ? 'disabled'"><a class="page-link" th:href="@{/account/orders(page=${orderPage.number - 1}, size=${orderPage.size})}">«</a></li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, orderPage.totalPages - 1)}" th:classappend="${i == orderPage.number} ? 'active'"><a class="page-link" th:href="@{/account/orders(page=${i}, size=${orderPage.size})}" th:text="${i + 1}"></a></li>
+                            <li class="page-item" th:classappend="${orderPage.last} ? 'disabled'"><a class="page-link" th:href="@{/account/orders(page=${orderPage.number + 1}, size=${orderPage.size})}">»</a></li>
+                        </ul>
+                    </nav>
+
+                </div> <!-- end col-md-9 -->
+            </div> <!-- end row -->
+        </div> <!-- end container -->
+    </div>
+</body>
+</html>

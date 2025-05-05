@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}" lang="vi"> <!-- Kế thừa layout chung user -->
+<head>
+    <title>Thông Tin Tài Khoản</title>
+    <!-- Thêm CSS nếu cần -->
+    <!-- <link rel="stylesheet" th:href="@{/css/account.css}"> -->
+     <style>
+         .detail-label { font-weight: 500; color: #6c757d; min-width: 100px; }
+     </style>
+</head>
+<body>
+    <!-- Nội dung chính -->
+    <div layout:fragment="content">
+        <div class="container mt-4 mb-5">
+            <div class="row">
+                <!-- Sidebar tài khoản (Ví dụ) -->
+                <div class="col-md-3">
+                    <div class="list-group shadow-sm">
+                         <!-- Đánh dấu active cho mục hiện tại -->
+                        <a th:href="@{/account}" class="list-group-item list-group-item-action active" aria-current="true">
+                            <i class="bi bi-person-circle me-2"></i>Thông tin tài khoản
+                        </a>
+                        <a th:href="@{/account/orders}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-receipt me-2"></i>Lịch sử đơn hàng
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action disabled" aria-disabled="true">
+                            <i class="bi bi-geo-alt me-2"></i>Địa chỉ (Chưa làm)
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action disabled" aria-disabled="true">
+                            <i class="bi bi-key me-2"></i>Đổi mật khẩu (Chưa làm)
+                        </a>
+                         <!-- Form Logout -->
+                         <form th:action="@{/logout}" method="post" class="list-group-item p-0">
+                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                             <button type="submit" class="list-group-item list-group-item-action list-group-item-danger border-0 w-100 text-start">
+                                  <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                             </button>
+                         </form>
+                    </div>
+                </div>
+
+                <!-- Nội dung chính: Thông tin tài khoản -->
+                <div class="col-md-9">
+                    <h2 class="mb-4">Thông Tin Tài Khoản</h2>
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div th:if="${user != null}">
+                                <p><span class="detail-label">Họ và tên:</span> <strong th:text="${user.fullName ?: '(Chưa cập nhật)'}"></strong></p>
+                                <p><span class="detail-label">Email:</span> <span th:text="${user.email}"></span></p>
+                                <p><span class="detail-label">Số điện thoại:</span> <span th:text="${user.phoneNumber ?: '(Chưa cập nhật)'}"></span></p>
+                                <p><span class="detail-label">Vai trò:</span> <span th:text="${user.role?.roleName}"></span></p>
+                                <p><span class="detail-label">Ngày tạo:</span> <span th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') : ''}"></span></p>
+
+                                <!-- TODO: Thêm nút Chỉnh sửa thông tin -->
+                                 <a href="#" class="btn btn-outline-primary btn-sm mt-3 disabled" aria-disabled="true">
+                                     <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa thông tin (Chưa làm)
+                                 </a>
+                            </div>
+                            <div th:unless="${user != null}" class="alert alert-danger">
+                                Không thể tải thông tin người dùng.
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- end col-md-9 -->
+            </div> <!-- end row -->
+        </div> <!-- end container -->
+    </div><!-- end layout fragment -->
+
+    <!-- Script nếu cần -->
+     <th:block layout:fragment="scripts"></th:block>
+
+</body>
+</html>
