@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.ToString; // Optional: for debugging
 
 import java.util.Objects; // For equals/hashCode
-// import java.util.Set; // Will be used later for @OneToMany
+import java.util.Set; // Will be used later for @OneToMany
 
 /**
  * Represents a product category (e.g., Banh Kem, Pastry).
@@ -35,8 +35,8 @@ public class Category {
     private String slug; // URL-friendly identifier
 
     // Relationship to Products (will be added later)
-    // @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    // private Set<Product> products;
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    private Set<Product> products;
 
     @Override
     public boolean equals(Object o) {

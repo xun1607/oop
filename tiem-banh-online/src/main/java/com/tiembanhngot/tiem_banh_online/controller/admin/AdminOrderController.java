@@ -65,17 +65,38 @@ public class AdminOrderController {
     public String viewOrderDetail(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         log.info("Admin: Request received for order detail ID: {}", id);
         try {
-            // Lấy chi tiết đơn hàng (cần đảm bảo OrderItems được fetch)
+            // 1. Gọi Service để lấy Order
             Order order = orderService.findOrderDetailsById(id)
                     .orElseThrow(() -> new OrderNotFoundException("Không tìm thấy đơn hàng với ID: " + id));
+
+            // 2. Thêm Order và OrderStatuses vào Model
             model.addAttribute("order", order);
-            model.addAttribute("orderStatuses", ORDER_STATUSES); // Cho dropdown cập nhật trạng thái
+            model.addAttribute("orderStatuses", ORDER_STATUSES);
+
+            // 3. Log trước khi trả về View
              log.debug("Admin: Displaying detail for order ID: {}", id);
+
+             // === THÊM LOG KIỂM TRA finalAmount Ở ĐÂY ===
+             log.error("!!! FINAL ORDER OBJECT TO VIEW (Admin): {}", order);
+             if (order != null) {
+                 log.error("   -> finalAmount from Order object (Admin): {}", order.getFinalAmount());
+                 log.error("   -> orderItems size (Admin): {}", order.getOrderItems() != null ? order.getOrderItems().size() : "NULL");
+             }
+             // ==========================================
+
+            // 4. Trả về tên View
             return "admin/order/detail"; // --> /templates/admin/order/detail.html
+
         } catch (OrderNotFoundException e) {
+            // Xử lý nếu không tìm thấy Order -> Redirect về list
             log.warn("Admin: Order not found for viewing details: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/admin/orders";
+        } catch (Exception e) { // <-- NÊN THÊM CATCH NÀY
+            // Bắt các lỗi khác có thể xảy ra khi lấy dữ liệu (ví dụ: LazyInit)
+            log.error("Error fetching order details for ID: {}", id, e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải chi tiết đơn hàng: " + e.getMessage());
+            return "redirect:/admin/orders"; // Redirect về list nếu có lỗi khác
         }
     }
 

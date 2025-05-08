@@ -150,12 +150,17 @@
                                     <strong th:text="${#numbers.formatDecimal(25000, 0, 'COMMA', 0, 'POINT')} + ' ₫'">25.000 ₫</strong>
                                 </li>
 
-                                <!-- Tổng cộng - ĐÃ THAY BẰNG TEXT TĨNH ĐỂ DEBUG -->
-                                <li class="list-group-item d-flex justify-content-between fw-bold fs-5 px-0 py-2 bg-light mt-2">
+                                <!-- Tổng cộng -->
+                                    <li class="list-group-item d-flex justify-content-between fw-bold fs-5 px-0 py-2 bg-light mt-2">
                                     <span>Tổng cộng</span>
-                                    <span class="text-danger">LOADING... ₫</span> <!-- <<<< THAY THẾ Ở ĐÂY -->
+                                    <span class="text-danger"
+                                        th:if="${finalAmount != null}"
+                                        th:text="${finalAmount} + ' ₫ (Raw)'"> <!-- Chỉ hiển thị giá trị thô -->
+                                    </span>
+                                    <span class="text-danger" th:if="${finalAmount == null}">
+                                    Lỗi tính tiền
+                                    </span>
                                 </li>
-                                <!-- KẾT THÚC PHẦN THAY THẾ -->
 
                             </ul>
 

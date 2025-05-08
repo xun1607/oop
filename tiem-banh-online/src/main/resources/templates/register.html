@@ -61,7 +61,7 @@
                  <!-- Phone Number (Optional) -->
                 <div class="mb-3">
                     <label for="phoneNumber" class="form-label">Số điện thoại</label>
-                    <input type="tel" class="form-control" th:field="*{phoneNumber}" id="phoneNumber" placeholder="09xxxxxxxx (Không bắt buộc)"
+                    <input type="tel" class="form-control" th:field="*{phoneNumber}" id="phoneNumber" placeholder="09xxxxxxxx"
                             th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid' : ''">
                      <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
                 </div>

@@ -21,7 +21,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -101,78 +101,7 @@ public class AdminProductController {
         }
     }
 
-    // Xử lý lưu sản phẩm
-    @PostMapping("/save")
-    public String saveProduct(@Valid @ModelAttribute("product") Product product,
-                              BindingResult bindingResult,
-                              @RequestParam("imageFile") MultipartFile imageFile,
-                              // Lấy ảnh cũ từ hidden input nếu là edit
-                              @RequestParam(value = "currentImageUrl", required = false) String currentImageUrl,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
-
-        boolean isNew = product.getProductId() == null;
-        log.info("Admin: Attempting to save {} product: {}", isNew ? "new" : "existing", product.getName());
-        String pageTitle = isNew ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")";
-        model.addAttribute("pageTitle", pageTitle); // Set lại title phòng khi lỗi
-
-        // Kiểm tra Category có được chọn không
-         if (product.getCategory() == null || product.getCategory().getCategoryId() == null) {
-              bindingResult.rejectValue("category", "NotEmpty.product.category", "Vui lòng chọn danh mục.");
-         }
-
-        if (bindingResult.hasErrors()) {
-            log.warn("Admin: Validation errors found for product {}: {}", product.getName(), bindingResult.getAllErrors());
-            loadCategories(model);
-            // Giữ lại ảnh cũ nếu là edit và có lỗi
-            if (!isNew) product.setImageUrl(currentImageUrl);
-            return "admin/product/form";
-        }
-
-        // Xử lý Upload Ảnh Mới (nếu có)
-        String newImageUrl = null; // Reset URL mới
-        if (!imageFile.isEmpty()) {
-            try {
-                log.debug("Admin: Processing uploaded file: {}", imageFile.getOriginalFilename());
-                String savedFileName = storageService.store(imageFile);
-                newImageUrl = "/uploads/" + savedFileName; // Đường dẫn URL sau khi lưu
-                product.setImageUrl(newImageUrl); // Gán URL mới cho product object
-                 log.info("Admin: New image saved as: {}, setting imageUrl.", savedFileName);
-            } catch (IOException e) {
-                log.error("Admin: Failed to store uploaded file for product {}: {}", product.getName(), e.getMessage());
-                // Thêm lỗi vào bindingResult để hiển thị trên form
-                bindingResult.rejectValue("imageUrl", "upload.error", "Lỗi khi tải ảnh lên: " + e.getMessage());
-                loadCategories(model);
-                 if (!isNew) product.setImageUrl(currentImageUrl); // Giữ lại ảnh cũ
-                return "admin/product/form";
-            }
-        } else {
-             product.setImageUrl(null); // Đặt là null nếu không có ảnh mới (Service sẽ xử lý giữ ảnh cũ)
-        }
-
-
-        // Lưu sản phẩm vào DB (truyền cả ảnh cũ)
-        try {
-            log.debug("Admin: Calling ProductService.saveProduct");
-            productService.saveProduct(product, isNew ? null : currentImageUrl); // Truyền oldImageUrl nếu là update
-            redirectAttributes.addFlashAttribute("successMessage", "Đã " + (isNew ? "thêm" : "cập nhật") + " sản phẩm thành công!");
-            log.info("Admin: Product {} successfully.", isNew ? "created" : "updated");
-            return "redirect:/admin/products";
-        } catch (DataIntegrityViolationException e) {
-            log.error("Admin: Data integrity violation for product {}: {}", product.getName(), e.getMessage());
-            bindingResult.rejectValue("slug", "duplicate", e.getMessage()); // Thêm lỗi vào field slug (hoặc name)
-            loadCategories(model);
-            product.setImageUrl(newImageUrl != null ? newImageUrl : currentImageUrl); // Giữ lại URL ảnh đã xử lý
-            return "admin/product/form";
-        } catch (Exception e) {
-            log.error("Admin: Error saving product {}: {}", product.getName(), e);
-            model.addAttribute("errorMessage", "Lỗi khi lưu sản phẩm: " + e.getMessage()); // Thêm lỗi chung
-            loadCategories(model);
-             product.setImageUrl(newImageUrl != null ? newImageUrl : currentImageUrl); // Giữ lại URL ảnh đã xử lý
-            return "admin/product/form";
-        }
-    }
-
+    
     // Xử lý xóa sản phẩm
     @PostMapping("/delete/{id}")
     public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
@@ -194,4 +123,170 @@ public class AdminProductController {
         }
         return "redirect:/admin/products";
     }
+        @PostMapping("/save")
+    public String saveProduct(
+            // @Valid: Kích hoạt validation cho các annotation trong Product (như @NotBlank, @Size, @NotNull cho price)
+            @Valid @ModelAttribute("product") Product product,
+            // BindingResult: Chứa kết quả validation, *phải* đặt ngay sau đối tượng được validate (@Valid)
+            BindingResult bindingResult,
+            // @RequestParam("imageFile"): Lấy file được upload từ input có name="imageFile"
+            @RequestParam("imageFile") MultipartFile imageFile,
+            // @RequestParam(value = "currentImageUrl", required = false):
+            // Lấy giá trị từ input ẩn có name="currentImageUrl" (dùng để lưu URL ảnh cũ khi edit)
+            // required = false: Cho phép giá trị này null hoặc rỗng (trường hợp thêm mới)
+            @RequestParam(value = "currentImageUrl", required = false) String currentImageUrl,
+            // Model: Để thêm attribute trả về view nếu có lỗi validation hoặc lỗi lưu
+            Model model,
+            // RedirectAttributes: Để thêm flash attribute (thông báo) khi redirect thành công
+            RedirectAttributes redirectAttributes
+    ) {
+
+        // Xác định xem đây là thao tác thêm mới hay cập nhật dựa vào productId
+        boolean isNew = product.getProductId() == null;
+        log.info("Admin: Attempting to save {} product: ID={}, Name={}",
+                 isNew ? "new" : "existing",
+                 isNew ? "N/A" : product.getProductId(),
+                 product.getName() != null ? product.getName() : "<NAME_IS_NULL>"); // Log tên an toàn
+
+        // Chuẩn bị pageTitle để hiển thị trên form (dù thành công hay lỗi)
+        String pageTitle = isNew ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")";
+        model.addAttribute("pageTitle", pageTitle);
+
+        // === KIỂM TRA VALIDATION ===
+
+        // 1. Kiểm tra Category thủ công (vì Category là object, @NotNull trên field categoryId không đủ)
+         if (product.getCategory() == null || product.getCategory().getCategoryId() == null) {
+              // Thêm lỗi vào BindingResult cho trường 'category'
+              bindingResult.rejectValue("category", "NotEmpty.product.category", "Vui lòng chọn danh mục.");
+              log.warn("Validation Error: Category is not selected.");
+         }
+
+        // 2. Kiểm tra các lỗi validation khác từ @Valid (annotation trên Product entity/DTO)
+        if (bindingResult.hasErrors()) {
+            log.warn("Admin: Validation errors found for product '{}': {}", product.getName(), bindingResult.getAllErrors());
+            // Nếu có lỗi, cần load lại danh sách categories cho dropdown trên form
+            loadCategories(model);
+            // QUAN TRỌNG: Nếu là edit và có lỗi, phải giữ lại ảnh cũ để hiển thị lại trên form
+            // Giá trị currentImageUrl được truyền từ view khi edit
+            if (!isNew) {
+                 product.setImageUrl(currentImageUrl); // Đặt lại URL ảnh cũ vào đối tượng product
+                 log.debug("Validation error on update. Restoring current image URL: {}", currentImageUrl);
+            }
+             // 'product' object (với lỗi và imageUrl cũ nếu có) đã nằm trong model do @ModelAttribute
+            return "admin/product/form"; // Trả về lại trang form để hiển thị lỗi
+        }
+
+        // === XỬ LÝ UPLOAD ẢNH MỚI (NẾU CÓ) ===
+
+        String newImageUrl = null; // Lưu URL của ảnh MỚI được upload (nếu có)
+        String finalImageUrlToSave = null; // URL cuối cùng sẽ được lưu vào DB
+
+        if (imageFile != null && !imageFile.isEmpty()) { // Kiểm tra xem người dùng có chọn file mới không
+            log.debug("Admin: New image file provided: '{}', size: {} bytes", imageFile.getOriginalFilename(), imageFile.getSize());
+            try {
+                // 1. Lưu file vật lý: Gọi StorageService để lưu file, nhận về tên file DUY NHẤT
+                String savedFileName = storageService.store(imageFile);
+                log.info("Admin: File saved successfully as: {}", savedFileName);
+
+                // 2. Tạo URL để truy cập ảnh: Ghép prefix đã cấu hình trong MvcConfig
+                newImageUrl = "/uploads/" + savedFileName;
+                finalImageUrlToSave = newImageUrl; // Ảnh mới sẽ được lưu
+                log.info("Admin: New image URL generated: {}", newImageUrl);
+
+                // 3. Xóa ảnh cũ (nếu là cập nhật và có ảnh mới khác ảnh cũ)
+                 if (!isNew && StringUtils.hasText(currentImageUrl) && !newImageUrl.equals(currentImageUrl)) {
+                     log.info("Attempting to delete old image: {}", currentImageUrl);
+                     // Chỉ xóa file nếu nó nằm trong thư mục uploads được quản lý
+                     if (currentImageUrl.startsWith("/uploads/")) {
+                          try {
+                              String oldFilename = currentImageUrl.substring("/uploads/".length());
+                              storageService.delete(oldFilename); // Gọi service để xóa file vật lý
+                              log.info("Successfully deleted old image file: {}", oldFilename);
+                          } catch (IOException e) {
+                               // Ghi log lỗi xóa ảnh nhưng không dừng tiến trình lưu sản phẩm
+                               log.error("Could not delete old image file '{}': {}", currentImageUrl, e.getMessage());
+                          }
+                      } else {
+                           log.warn("Old image URL '{}' does not start with '/uploads/'. Skipping deletion.", currentImageUrl);
+                      }
+                  }
+
+            } catch (IOException e) {
+                // Lỗi xảy ra trong quá trình lưu file ảnh mới
+                log.error("Admin: Failed to store uploaded file '{}': {}", imageFile.getOriginalFilename(), e.getMessage());
+                // Thêm lỗi vào BindingResult để hiển thị trên form
+                // Sử dụng "imageUrl" vì đó là trường logic liên quan, dù lỗi là do file upload
+                bindingResult.rejectValue("imageUrl", "upload.error", "Lỗi khi tải ảnh lên: " + e.getMessage());
+                loadCategories(model); // Load lại categories
+                // Giữ lại ảnh cũ nếu là edit
+                if (!isNew) {
+                    product.setImageUrl(currentImageUrl);
+                }
+                return "admin/product/form"; // Quay lại form với lỗi upload
+            }
+        } else { // Người dùng KHÔNG upload file ảnh mới
+            if (isNew) {
+                // Thêm mới sản phẩm và không có ảnh -> dùng ảnh mặc định
+                finalImageUrlToSave = "/img/placeholder.png"; // Ảnh tĩnh placeholder
+                log.debug("No new image uploaded for new product. Setting placeholder image URL.");
+            } else {
+                // Cập nhật sản phẩm và không có ảnh mới -> giữ nguyên ảnh cũ
+                finalImageUrlToSave = currentImageUrl; // Giữ nguyên URL ảnh cũ từ DB
+                log.debug("No new image uploaded for existing product. Keeping old image URL: {}", currentImageUrl);
+            }
+        }
+
+        // === GÁN URL ẢNH CUỐI CÙNG VÀO ĐỐI TƯỢNG PRODUCT ===
+        product.setImageUrl(finalImageUrlToSave);
+        log.debug("Final imageUrl to be saved for product: {}", finalImageUrlToSave);
+
+
+        // === GỌI SERVICE ĐỂ LƯU SẢN PHẨM VÀO DATABASE ===
+        try {
+            log.debug("Calling ProductService.saveProduct...");
+            // Truyền đối tượng product đã được cập nhật (bao gồm slug, imageUrl mới/cũ/placeholder)
+            productService.saveProduct(product); // Service bây giờ chỉ cần nhận product
+
+            // Thêm thông báo thành công để hiển thị sau khi redirect
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã " + (isNew ? "thêm" : "cập nhật") + " sản phẩm '" + product.getName() + "' thành công!");
+            log.info("Product '{}' saved successfully.", product.getName());
+
+            // Chuyển hướng về trang danh sách sản phẩm
+            return "redirect:/admin/products";
+
+        } catch (DataIntegrityViolationException e) { // Lỗi ràng buộc dữ liệu (ví dụ: slug trùng)
+            log.error("Data integrity violation while saving product '{}': {}", product.getName(), e.getMessage());
+            // Cố gắng xác định lỗi và thêm vào BindingResult
+            // Lưu ý: Tên constraint ('products_slug_key', 'products_name_key') cần khớp với tên trong DB của bạn
+            if (e.getMessage() != null) {
+                String lowerCaseMsg = e.getMessage().toLowerCase();
+                if (lowerCaseMsg.contains("slug") || lowerCaseMsg.contains("products_slug_key")) { // Kiểm tra cả text và tên constraint (ví dụ)
+                     bindingResult.rejectValue("slug", "duplicate.slug", "Slug '" + product.getSlug() + "' đã tồn tại. Vui lòng sửa tên sản phẩm hoặc slug.");
+                } else if (lowerCaseMsg.contains("name") || lowerCaseMsg.contains("products_name_key")) { // Ví dụ nếu có unique constraint cho name
+                     bindingResult.rejectValue("name", "duplicate.name", "Tên sản phẩm '" + product.getName() + "' đã tồn tại.");
+                } else {
+                     // Lỗi ràng buộc khác không xác định
+                     model.addAttribute("errorMessage", "Lỗi lưu sản phẩm do ràng buộc dữ liệu: " + e.getMessage());
+                }
+            } else {
+                 model.addAttribute("errorMessage", "Lỗi lưu sản phẩm do ràng buộc dữ liệu không xác định.");
+            }
+
+            loadCategories(model); // Load lại categories
+            // Giữ lại URL ảnh đã xử lý (có thể là mới hoặc cũ) để hiển thị lại form
+            product.setImageUrl(finalImageUrlToSave); // Đảm bảo model có URL đúng
+            return "admin/product/form"; // Quay lại form với lỗi
+
+        } catch (Exception e) { // Bắt các lỗi không mong muốn khác khi lưu DB
+            log.error("Admin: Unexpected error saving product '{}': {}", product.getName(), e.getMessage(), e); // Log cả stack trace
+            model.addAttribute("errorMessage", "Lỗi không mong muốn khi lưu sản phẩm: " + e.getMessage());
+            loadCategories(model);
+            product.setImageUrl(finalImageUrlToSave); // Giữ lại URL ảnh đã xử lý
+            return "admin/product/form"; // Quay lại form với lỗi
+        }
+    }
+
+    
+
 }

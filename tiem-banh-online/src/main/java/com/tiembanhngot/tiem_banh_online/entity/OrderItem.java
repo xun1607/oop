@@ -33,10 +33,9 @@ public class OrderItem {
     private Order order;
 
     // Relationship: Many OrderItems - 1 Product
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) // Should always refer to a Product
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product; // Reference to the actual product
-
+    @ManyToOne(fetch = FetchType.EAGER, optional = false) // Tạm đổi thành EAGER
+@JoinColumn(name = "product_id", nullable = false)
+private Product product;
     @Column(nullable = false)
     private Integer quantity; // Number of this product ordered
 

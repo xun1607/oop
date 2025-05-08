@@ -28,6 +28,12 @@
                     </li> -->
                 </ul>
                 <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-2"> <!-- Thêm me-2 để tạo khoảng cách -->
+                        <form class="d-flex" role="search" th:action="@{/search}" method="get">
+                            <input class="form-control form-control-sm me-1" type="search" name="query" placeholder="Tìm kiếm bánh..." aria-label="Tìm kiếm" th:value="${query}"> <!-- Giữ lại query cũ nếu có -->
+                            <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                        </form>
+                    </li>
                     <!-- Phần giỏ hàng và user giữ nguyên như trước -->
                     <li class="nav-item me-2">
                         <a th:href="@{/cart}" class="btn btn-outline-primary position-relative">

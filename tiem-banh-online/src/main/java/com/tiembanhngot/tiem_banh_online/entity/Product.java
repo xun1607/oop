@@ -9,8 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Objects; // For equals/hashCode
-// import java.util.List; // For gallery_urls later
-// import java.util.Map; // For size_options later
+import java.util.List; // For gallery_urls later
+import java.util.Map; // For size_options later
 
 /**
  * Represents a product available for sale.
@@ -42,9 +42,9 @@ public class Product {
     private BigDecimal price; // Base price
 
     // Future enhancements:
-    // @Column(name = "size_options", columnDefinition = "jsonb")
+    //@Column(name = "size_options", columnDefinition = "jsonb")
     // @Type(JsonBinaryType.class) // Requires hypersistence-utils dependency
-    // private Map<String, BigDecimal> sizeOptions; // e.g., {"small": 300000, "large": 450000}
+    //private Map<String, BigDecimal> sizeOptions; // e.g., {"small": 300000, "large": 450000}
 
     @Column(name = "image_url", length = 500)
     private String imageUrl; // Main representative image URL

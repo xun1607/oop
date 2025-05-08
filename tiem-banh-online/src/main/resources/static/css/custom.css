@@ -86,8 +86,8 @@ a:hover {
 .product-card-img { height: 220px; width: 100%; object-fit: cover; transition: transform 0.3s ease; }
 .product-card:hover .product-card-img { transform: scale(1.05); }
 .product-card .card-body { padding: 1rem; }
-.product-card .btn-outline-primary { border-color: #FFB6C1; color: #d98199; border-radius: 50px; font-size: 0.9rem; padding: 0.4rem 1rem; transition: all 0.3s ease; }
-.product-card .btn-outline-primary:hover { background-color: #FFB6C1; color: white; border-color: #FFB6C1; }
+.product-card .btn-outline-primary { border-color: #f18696; color: #bd1240; border-radius: 50px; font-size: 0.9rem; padding: 0.4rem 1rem; transition: all 0.3s ease; }
+.product-card .btn-outline-primary:hover { background-color: #d3445a; color: white; border-color: #FFB6C1; }
 
 /* --- Product Detail --- */
 .product-detail-img { border-radius: 8px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 100%; height: auto; }
@@ -113,11 +113,11 @@ footer .bi { margin-right: 0.5rem; color: #D2691E; }
 .footer-bottom a { color: #D2691E !important; font-weight: bold; }
 
 /* --- General Buttons --- */
-.btn { border-radius: 50px; /* Rounded buttons */ padding: 0.5rem 1.2rem; transition: all 0.3s ease; }
+.btn { border-radius: 50px; /* Rounded buttons */ padding: 0.5rem 1.2rem; transition: all 0.3s ease; font-weight: 550;}
 .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.85rem; }
 .btn-lg { padding: 0.8rem 1.8rem; font-size: 1.1rem; }
-.btn-primary { background-color: #FFB6C1; border-color: #FFB6C1; color: #fff; }
-.btn-primary:hover { background-color: #f7a0ae; border-color: #f7a0ae; color: #fff; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.btn-primary { background-color: #ec2d49; border-color: #f31f3f; color: #fff; }
+.btn-primary:hover { background-color: #c70626; border-color: #d41333de; color: #fff; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .btn-success { background-color: #5cb85c; border-color: #5cb85c; }
 .btn-success:hover { background-color: #4a9b4a; border-color: #4a9b4a; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .btn-outline-primary { border-color: #FFB6C1; color: #d98199; }

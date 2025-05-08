@@ -248,45 +248,33 @@ public class CartService {
             return;
         }
         log.debug("Recalculating totals for cart...");
-
-        // LUÔN KHỞI TẠO BẰNG ZERO ĐỂ TRÁNH NULL
+        // ***** LUÔN KHỞI TẠO BẰNG ZERO *****
         BigDecimal calculatedTotalAmount = BigDecimal.ZERO;
         int calculatedTotalItems = 0;
 
-        // Kiểm tra items map có null không
         if (cart.getItems() != null) {
             for (CartItemDTO item : cart.getItems().values()) {
-                // Kiểm tra null cho giá và số lượng hợp lệ trước khi tính
                 if (item != null && item.getPrice() != null && item.getQuantity() > 0) {
                     try {
-                        // Tính thành tiền cho từng dòng
                         BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
                         item.setLineTotal(lineTotal);
-                        // Cộng dồn tổng tiền
                         calculatedTotalAmount = calculatedTotalAmount.add(lineTotal);
-                        // Cộng dồn tổng số lượng
                         calculatedTotalItems += item.getQuantity();
                     } catch (ArithmeticException e) {
-                         log.error("ArithmeticException during line total calculation for item productId: {}. Price: {}, Quantity: {}",
-                                   item.getProductId(), item.getPrice(), item.getQuantity(), e);
-                         // Quyết định xử lý: có thể bỏ qua item lỗi hoặc đặt giá trị mặc định
-                         item.setLineTotal(BigDecimal.ZERO); // Đặt là 0 nếu lỗi
+                         log.error("ArithmeticException for item productId: {}", item.getProductId(), e);
+                         item.setLineTotal(BigDecimal.ZERO);
                     }
                 } else {
-                    log.warn("Skipping item total calculation: Item is null, price is null, or quantity is not positive. Item: {}", item);
-                    if (item != null) {
-                         item.setLineTotal(BigDecimal.ZERO); // Đặt là 0 nếu không tính được
-                    }
+                    log.warn("Skipping item total calculation due to invalid data: {}", item);
+                    if (item != null) item.setLineTotal(BigDecimal.ZERO);
                 }
             }
         } else {
             log.warn("Cart items map is null. Totals will be zero.");
         }
-
-        // LUÔN CẬP NHẬT GIÁ TRỊ VÀO CART, kể cả khi là zero
+        // ***** LUÔN GÁN GIÁ TRỊ VÀO CART *****
         cart.setTotalAmount(calculatedTotalAmount);
         cart.setTotalItems(calculatedTotalItems);
-
         log.info("Cart totals recalculated: Items={}, Amount={}", cart.getTotalItems(), cart.getTotalAmount());
     }
 }

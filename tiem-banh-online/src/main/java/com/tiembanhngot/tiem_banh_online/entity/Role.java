@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.ToString; // Optional
 
 import java.util.Objects; // For equals/hashCode
-// import java.util.Set; // Will be used later for @OneToMany
+import java.util.Set; // Will be used later for @OneToMany
 
 /**
  * Represents a user role (e.g., ADMIN, CUSTOMER).

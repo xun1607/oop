@@ -8,7 +8,7 @@ import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.hibernate.query.Page;
+
 import org.springframework.security.crypto.password.PasswordEncoder; // **Import**
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,9 +1,6 @@
 package com.tiembanhngot.tiem_banh_online.config;
 
 
-import com.tiembanhngot.tiem_banh_online.entity.Role;
-import com.tiembanhngot.tiem_banh_online.repository.RoleRepository;
-
 import com.tiembanhngot.tiem_banh_online.entity.*; // Import các entity cần thiết
 import com.tiembanhngot.tiem_banh_online.repository.*; // Import các repository cần thiết
 import lombok.RequiredArgsConstructor;
@@ -14,8 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional; // Import Transactional
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 @Component // Đánh dấu là một Spring Bean để được Spring quản lý và thực thi
@@ -50,35 +45,49 @@ public class DataLoader implements CommandLineRunner {
         Category cookies = createCategoryIfNotFound("Cookies", "Bánh quy các loại", "cookies");
 
         // 4. Tạo Products nếu chưa tồn tại (Chỉ tạo nếu các category tương ứng đã được tạo)
-        if (banhKem != null) {
-             createProductIfNotFound("Bánh Kem Dâu Tươi", "banh-kem-dau-tuoi",
-                     "Bánh kem mềm mịn với lớp kem tươi và dâu tây Đà Lạt.",
-                     new BigDecimal("350000.00"), "/img/products/banh-kem-dau.jpg", banhKem);
-             createProductIfNotFound("Bánh Kem Chocolate", "banh-kem-chocolate",
-                     "Cốt bánh chocolate ẩm, phủ ganache chocolate đậm đà.",
-                     new BigDecimal("380000.00"), "/img/products/banh-kem-choco.jpg", banhKem);
-        }
+        
+if (banhKem != null) {
+     createProductIfNotFound("Bánh Kem Dâu Tươi", "banh-kem-dau-tuoi",
+             "Bánh kem mềm mịn với lớp kem tươi và dâu tây Đà Lạt.",
+             new BigDecimal("350000.00"),
+             "/img/banhkem_dau.jpg", 
+             banhKem);
+     createProductIfNotFound("Bánh Kem Chocolate", "banh-kem-chocolate",
+             "Cốt bánh chocolate ẩm, phủ ganache chocolate đậm đà.",
+             new BigDecimal("380000.00"),
+             "/img/banhkem_socola.jpg", 
+             banhKem);
+}
 
-        if (pastry != null) {
-            createProductIfNotFound("Croissant Bơ", "croissant-bo",
-                    "Bánh sừng bò ngàn lớp, thơm lừng mùi bơ Pháp.",
-                    new BigDecimal("30000.00"), "/img/products/croissant.jpg", pastry);
-            createProductIfNotFound("Pain au Chocolat", "pain-au-chocolat",
-                    "Bánh mì cuộn socola đen.",
-                    new BigDecimal("35000.00"), "/img/products/pain-choco.jpg", pastry);
-        }
+if (pastry != null) {
+    createProductIfNotFound("Croissant Bơ", "croissant-bo",
+            "Bánh sừng bò ngàn lớp, thơm lừng mùi bơ Pháp.",
+            new BigDecimal("30000.00"),
+            "/img/coison_bo.jpg", 
+            pastry);
+    createProductIfNotFound("Pain au Chocolat", "pain-au-chocolat",
+            "Bánh mì cuộn socola đen.",
+            new BigDecimal("35000.00"),
+            "/img/PainauChocolat.jpg", 
+            pastry);
+}
 
-        if (banhMi != null) {
-             createProductIfNotFound("Bánh Mì Xúc Xích Phô Mai", "banh-mi-xuc-xich-phomai",
-                     "Bánh mì mềm kẹp xúc xích và phô mai tan chảy.",
-                     new BigDecimal("25000.00"), "/img/products/banh-mi-xucxich.jpg", banhMi);
-        }
+if (banhMi != null) {
+     // Giả sử bạn có ảnh banh_mi_xuc_xich_pho_mai.jpg trong /img
+     createProductIfNotFound("Bánh Mì Xúc Xích Phô Mai", "banh-mi-xuc-xich-phomai",
+             "Bánh mì mềm kẹp xúc xích và phô mai tan chảy.",
+             new BigDecimal("25000.00"),
+             "/img/banh_mi_xuc_xich_pho_mai.jpg", // <<< Sửa lại đường dẫn (thay ảnh mẫu nếu cần)
+             banhMi);
+}
 
-         if (cookies != null) {
-             createProductIfNotFound("Cookies Socola Chip", "cookies-socola-chip",
-                     "Bánh quy bơ giòn rụm với hạt socola.",
-                     new BigDecimal("15000.00"), "/img/products/cookie-choco-chip.jpg", cookies);
-        }
+ if (cookies != null) {
+     createProductIfNotFound("Cookies Socola Chip", "cookies-socola-chip",
+             "Bánh quy bơ giòn rụm với hạt socola.",
+             new BigDecimal("15000.00"),
+             "/img/banh_quy_socola.png", // <<< Sửa lại đường dẫn và đuôi file
+             cookies);
+}
 
 
         log.info("Finished loading initial data.");

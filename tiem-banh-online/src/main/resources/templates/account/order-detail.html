@@ -115,6 +115,7 @@
                                      <tbody>
                                          <!-- Lặp qua các item trong đơn hàng -->
                                          <tr th:each="item : ${order.orderItems}">
+                                            <td class="text-center" th:text="${item?.quantity ?: '?'}"></td>
                                              <td>
                                                  <div class="d-flex align-items-center">
                                                       <img th:src="@{${item.product?.imageUrl ?: '/img/placeholder.png'}}"
@@ -138,12 +139,12 @@
                                              </td>
                                              <td class="text-center" th:text="${item.quantity}"></td>
                                              <td class="text-end fw-bold text-nowrap">
-                                                  <span class="currency"
-                                                        th:if="${item.priceAtPurchase != null and item.quantity != null}"
-                                                        th:text="${#numbers.formatDecimal(item.priceAtPurchase.multiply(T(java.math.BigDecimal).valueOf(item.quantity)), 0, 'COMMA', 0, 'POINT')}">
-                                                  </span>
-                                                   <span th:unless="${item.priceAtPurchase != null and item.quantity != null}" class="text-danger">Lỗi</span>
-                                             </td>
+                                                <span class="currency"
+                                                      th:if="${item?.priceAtPurchase != null and item?.quantity != null and item.quantity > 0}" 
+                                                      th:text="${#numbers.formatDecimal(item.priceAtPurchase.multiply(T(java.math.BigDecimal).valueOf(item.quantity.longValue())), 0, 'COMMA', 0, 'POINT')}"> <!-- THÊM .longValue() -->
+                                                </span>
+                                                 <span th:if="${item?.priceAtPurchase == null or item?.quantity == null or item.quantity <= 0}" class="text-danger">Lỗi</span> <!-- Thêm điều kiện quantity <= 0 -->
+                                           </td>
                                          </tr>
                                      </tbody>
                                  </table>
