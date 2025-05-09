@@ -2,7 +2,7 @@
 services:
 - type: web
   name: tiem-banh
-  runtime: java
+  env: java
   repo: https://github.com/ndhsayokay/oop
 rootDir: tiem-banh-online
   plan: free
