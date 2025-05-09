@@ -4,7 +4,7 @@ services:
   name: tiem-banh
   env: java
   repo: https://github.com/ndhsayokay/oop
-rootDir: tiem-banh-online
+  rootDir: tiem-banh-online
   plan: free
   envVars:
   - key: SPRING_PROFILES_ACTIVE
