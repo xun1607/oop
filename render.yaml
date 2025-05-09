@@ -1,0 +1,20 @@
+# Exported from Render on 2025-05-09T07:19:00Z
+services:
+- type: web
+  name: tiem-banh
+  runtime: java
+  repo: https://github.com/ndhsayokay/oop
+  plan: free
+  envVars:
+  - key: SPRING_PROFILES_ACTIVE
+    sync: false
+  - key: SPRING_DATASOURCE_PASSWORD
+    sync: false
+  - key: SPRING_DATASOURCE_USERNAME
+    sync: false
+  - key: SPRING_DATASOURCE_URL
+    sync: false
+  region: singapore
+  buildCommand: mvnw clean package -DskipTests
+  startCommand: java -jar target/tiem-banh-online-0.0.1-SNAPSHOT.jar
+version: "1"
