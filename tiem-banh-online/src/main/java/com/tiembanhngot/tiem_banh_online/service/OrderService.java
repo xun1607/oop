@@ -65,7 +65,11 @@ public class OrderService {
             orderItem.setProduct(product);
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setPriceAtPurchase(cartItem.getPrice()); // Lấy giá từ CartItemDTO
+            orderItem.setSizeAtPurchase(cartItem.getSelectedSize());
             order.addOrderItem(orderItem);
+            log.debug("Added OrderItem: ProductId={}, Qty={}, Price={}, Size={}",
+                      orderItem.getProduct().getProductId(), orderItem.getQuantity(),
+                      orderItem.getPriceAtPurchase(), orderItem.getSizeAtPurchase());
         }
 
         order.setTotalAmount(cart.getTotalAmount());
@@ -74,6 +78,7 @@ public class OrderService {
         order.setStatus("PENDING"); // Trạng thái chờ xử lý
         order.setPaymentMethod(orderDto.getPaymentMethod());
         order.setPaymentStatus("UNPAID");
+        
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order placed successfully with code: {}", savedOrder.getOrderCode());

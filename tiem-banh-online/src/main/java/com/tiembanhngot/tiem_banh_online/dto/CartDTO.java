@@ -9,7 +9,7 @@ import java.util.Collection; // Import Collection
 @Data
 public class CartDTO {
     // Dùng Map<ProductId, CartItemDTO> để truy cập item nhanh hơn
-    private Map<Long, CartItemDTO> items = new LinkedHashMap<>();
+    private Map<String, CartItemDTO> items = new LinkedHashMap<>();
     private BigDecimal totalAmount = BigDecimal.ZERO;
     private int totalItems = 0; // Tổng số lượng các sản phẩm
 

@@ -43,13 +43,14 @@ public class CartController {
     public String addToCart(@RequestParam("productId") Long productId,
                             @RequestParam(value = "quantity", defaultValue = "1") int quantity,
                            // @ModelAttribute("shoppingCart") CartDTO cart, // Không cần inject cart ở đây nữa vì service sẽ lấy từ session
+                           @RequestParam(value = "selectedSize", required = false) String selectedSize,
                             HttpSession session, // Truyền session vào service
                             HttpServletRequest request, // Để lấy referer URL
                             RedirectAttributes redirectAttributes) {
-        log.info("Received request to add product ID: {} with quantity: {}", productId, quantity);
+        log.info("Received request to add product ID: {} with quantity: {}, selectedSize: {}", productId, quantity, selectedSize);
         try {
-            cartService.addToCart(productId, quantity, session); // Gọi service xử lý
-            redirectAttributes.addFlashAttribute("cartMessageSuccess", "Đã thêm sản phẩm vào giỏ hàng!");
+            cartService.addToCart(productId, quantity, selectedSize, session);
+        redirectAttributes.addFlashAttribute("cartMessageSuccess", "Đã thêm sản phẩm vào giỏ hàng!");
             log.info("Successfully added product ID: {} to cart.", productId);
         } catch (ProductNotFoundException | IllegalArgumentException e) {
             log.warn("Error adding product {} to cart: {}", productId, e.getMessage());

@@ -17,8 +17,8 @@
                     <div class="list-group">
                         <a th:href="@{/account}" class="list-group-item list-group-item-action">Thông tin tài khoản</a>
                         <a th:href="@{/account/orders}" class="list-group-item list-group-item-action active" aria-current="true">Lịch sử đơn hàng</a>
-                        <a th:href="@{/account/address}" class="list-group-item list-group-item-action">Địa chỉ</a>
-                        <a th:href="@{/account/change-password}" class="list-group-item list-group-item-action">Đổi mật khẩu</a>
+                        <a th:href="@{/account/address}" class="list-group-item list-group-item-action">Địa chỉ (Chưa làm)</a>
+                        <a th:href="@{/account/change-password}" class="list-group-item list-group-item-action">Đổi mật khẩu (Chưa làm)</a>
                          <!-- Form Logout -->
                          <form th:action="@{/logout}" method="post" class="list-group-item p-0">
                              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />

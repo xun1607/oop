@@ -16,4 +16,5 @@ public class CartItemDTO {
     private int quantity;
     private BigDecimal lineTotal; // Thành tiền (price * quantity)
     private String slug; // Thêm slug để tạo link dễ dàng
+    private String selectedSize;
 }

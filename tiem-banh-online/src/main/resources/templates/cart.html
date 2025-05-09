@@ -56,7 +56,9 @@
                             <td>
                                 <!-- Sử dụng slug từ CartItemDTO để tạo link -->
                                 <a th:href="@{/products/{slug}(slug=${item.slug})}" th:text="${item.name}" class="text-decoration-none product-link">Product Name</a>
-                                <!-- Thêm size nếu có -->
+                                <!-- Thêm size -->
+                                <small class="d-block text-muted" th:if="${item.selectedSize != null}"
+                                th:text="'Size: ' + ${item.selectedSize}"></small>
                             </td>
                             <td class="text-end" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Price</td>
                             <td class="text-center">

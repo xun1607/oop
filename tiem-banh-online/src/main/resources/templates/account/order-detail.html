@@ -129,7 +129,9 @@
                                                               class="fw-medium text-decoration-none product-link"></a>
                                                            <span th:unless="${item.product != null}" class="text-muted fst-italic">(Sản phẩm không còn tồn tại)</span>
                                                           <!-- Có thể thêm size nếu có -->
-                                                          <!-- <small class="d-block text-muted" th:if="${item.sizeAtPurchase}" th:text="'Size: ' + ${item.sizeAtPurchase}"></small> -->
+                                                          <small class="d-block text-muted" th:if="${item.sizeAtPurchase != null}"
+                                                          th:text="'Size: ' + ${item.sizeAtPurchase}"></small>
+                                                          
                                                       </div>
                                                  </div>
                                              </td>

@@ -23,7 +23,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.util.StringUtils;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -135,6 +138,7 @@ public class AdminProductController {
             // Lấy giá trị từ input ẩn có name="currentImageUrl" (dùng để lưu URL ảnh cũ khi edit)
             // required = false: Cho phép giá trị này null hoặc rỗng (trường hợp thêm mới)
             @RequestParam(value = "currentImageUrl", required = false) String currentImageUrl,
+            @RequestParam Map<String, String> allRequestParams,
             // Model: Để thêm attribute trả về view nếu có lỗi validation hoặc lỗi lưu
             Model model,
             // RedirectAttributes: Để thêm flash attribute (thông báo) khi redirect thành công
@@ -175,7 +179,32 @@ public class AdminProductController {
              // 'product' object (với lỗi và imageUrl cũ nếu có) đã nằm trong model do @ModelAttribute
             return "admin/product/form"; // Trả về lại trang form để hiển thị lỗi
         }
+        // --- XỬ LÝ SIZE OPTIONS ---
+     Map<String, BigDecimal> sizeOptionsMap = new HashMap<>();
+     for (int i = 1; i <= 3; i++) { // Giả sử có tối đa 3 cặp input
+         String sizeName = allRequestParams.get("sizeOptions_name_" + i);
+         String sizePriceStr = allRequestParams.get("sizeOptions_price_" + i);
 
+         // Chỉ thêm nếu cả tên và giá đều có và giá hợp lệ
+         if (StringUtils.hasText(sizeName) && StringUtils.hasText(sizePriceStr)) {
+             try { 
+                 BigDecimal sizePrice = new BigDecimal(sizePriceStr.replace(",", "")); // Bỏ dấu phẩy nếu có
+                 if (sizePrice.compareTo(BigDecimal.ZERO) >= 0) { // Giá phải >= 0
+                      sizeOptionsMap.put(sizeName.trim(), sizePrice);
+                      log.debug("Added size option: {} - {}", sizeName.trim(), sizePrice);
+                 } else {
+                      log.warn("Invalid price for size {}: {}", sizeName, sizePriceStr);
+                      // Có thể thêm lỗi vào bindingResult nếu muốn
+                      // bindingResult.rejectValue("", "InvalidPrice", "Giá size " + i + " không hợp lệ.");
+                 }
+             } catch (NumberFormatException e) {
+                 log.warn("Invalid number format for size price {}: {}", i, sizePriceStr);
+                  // bindingResult.rejectValue("", "InvalidPriceFormat", "Định dạng giá size " + i + " không đúng.");
+             }
+         }
+     }
+     product.setSizeOptions(sizeOptionsMap); // Gán Map đã tạo vào product
+     // --- KẾT THÚC XỬ LÝ SIZE ---
         // === XỬ LÝ UPLOAD ẢNH MỚI (NẾU CÓ) ===
 
         String newImageUrl = null; // Lưu URL của ảnh MỚI được upload (nếu có)

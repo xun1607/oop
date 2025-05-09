@@ -130,6 +130,8 @@
                                         <div>
                                             <h6 class="my-0" th:text="${item?.name ?: '(Lỗi sản phẩm)'}">Product name</h6>
                                             <small class="text-muted" th:text="'SL: ' + ${item?.quantity ?: '?'}">SL: ?</small>
+                                            <small class="d-block text-muted" th:if="${item.selectedSize != null}"
+                                                 th:text="'Size: ' + ${item.selectedSize}"></small>
                                         </div>
                                     </div>
                                     <span class="text-muted text-nowrap"

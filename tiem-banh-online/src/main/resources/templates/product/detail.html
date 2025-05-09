@@ -1,78 +1,181 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}" lang="vi"> <!-- Kế thừa layout chung -->
 <head>
-    <meta charset="UTF-8">
-    <title th:text="${product != null ? product.name + ' - Tiệm Bánh Ngon' : 'Chi tiết sản phẩm'}">Chi tiết sản phẩm</title>
+    <!-- Title động -->
+    <title th:if="${product != null}" th:text="${product.name + ' - Tiệm Bánh Ngon'}">Chi tiết sản phẩm</title>
+    <title th:unless="${product != null}">Không Tìm Thấy Sản Phẩm - Tiệm Bánh Ngon</title>
+
     <meta name="description" th:content="${product != null ? product.description : 'Thông tin chi tiết về sản phẩm bánh ngọt.'}">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/custom.css}">
+    <style>
+        /* CSS bổ sung nếu cần */
+        .product-detail-img {
+            border-radius: 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1; /* Giữ tỉ lệ vuông nếu muốn */
+            object-fit: cover;
+        }
+        .product-detail h1 { font-family: 'Pacifico', cursive; color: #a0522d; margin-bottom: 0.5rem; }
+        .product-detail .category-link { font-size: 1.1rem; }
+        .product-detail .product-price { font-size: 1.8rem; margin-bottom: 1rem; color: #e74c3c; font-weight: bold;}
+        .product-detail .size-option label { cursor: pointer; }
+        .product-detail .size-option .size-price { color: #e74c3c; font-weight: 500; margin-left: 5px;}
+        .currency::after { content: ' ₫'; margin-left: 2px; }
+        .form-check-input:checked { background-color: #D2691E; border-color: #a0522d;}
+    </style>
 </head>
 <body>
+    <div layout:fragment="content">
+        <main class="container mt-4 mb-5 product-detail">
+            <!-- Kiểm tra nếu có sản phẩm -->
+            <div th:if="${product}">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-3">
+                  <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Trang Chủ</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/products}">Sản Phẩm</a></li>
+                    <!-- Link danh mục nếu có -->
+                    <li class="breadcrumb-item" th:if="${product.category}">
+                        <a th:href="@{/products(category=${product.category.slug})}" <!-- Hoặc link category riêng -->
+                        <!   th:text="${product.category.name}">Category</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">Product Name</li>
+                  </ol>
+                </nav>
 
-    <div th:replace="~{fragments/header :: header}"></div>
+                <div class="row g-lg-5 g-4"> <!-- Tăng khoảng cách trên màn lớn -->
+                    <!-- Cột ảnh -->
+                    <div class="col-md-6">
+                        <img th:src="@{${product.imageUrl ?: '/img/placeholder.png'}}" class="img-fluid product-detail-img" th:alt="${product.name}">
+                        <!-- TODO: Thêm gallery ảnh nhỏ nếu có -->
+                    </div>
 
-    <main class="container mt-4 mb-5 product-detail">
-        <div th:if="${product}">
-            <nav aria-label="breadcrumb" class="mb-3">
-              <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a th:href="@{/}">Trang Chủ</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/products}">Sản Phẩm</a></li>
-                <li class="breadcrumb-item" th:if="${product.category}"><a th:href="@{/products/category/{slug}(slug=${product.category.slug})}" th:text="${product.category.name}">Category</a></li>
-                <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">Product Name</li>
-              </ol>
-            </nav>
+                    <!-- Cột thông tin và mua hàng -->
+                    <div class="col-md-6">
+                        <h1 th:text="${product.name}">Product Name</h1>
+                        <!-- Link danh mục -->
+                        <p class="mb-2" th:if="${product.category}">
+                            <a th:href="@{/products(category=${product.category.slug})}"
+                               class="text-muted text-decoration-none category-link"
+                               th:text="${product.category.name}">Category Name</a>
+                        </p>
 
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <img th:src="${product.imageUrl ?: '/img/placeholder.png'}" class="img-fluid product-detail-img" th:alt="${product.name}">
-                </div>
+                         <!-- Giá sản phẩm -->
+                         <!-- Chỉ hiển thị giá mặc định nếu KHÔNG có size options -->
+                         <h4 class="product-price mb-3"
+                             th:if="${product.sizeOptions == null or product.sizeOptions.isEmpty()}"
+                             th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
+                             Price
+                         </h4>
+                          <!-- Nếu có size, giá sẽ hiển thị theo size được chọn -->
+                          <p th:if="${product.sizeOptions != null and !product.sizeOptions.isEmpty()}" class="text-muted mb-3">
+                              (Chọn kích thước để xem giá)
+                          </p>
 
-                <div class="col-md-6">
-                    <h1 th:text="${product.name}">Product Name</h1>
-                    <p class="lead text-muted" th:if="${product.category}" th:text="${product.category.name}">Category Name</p>
-                    <h4 class="text-danger product-price mb-3" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">Price</h4>
+                        <hr>
+                        <h5>Mô tả sản phẩm</h5>
+                        <p th:text="${product.description ?: 'Chưa có mô tả cho sản phẩm này.'}">Detailed product description goes here...</p>
+                        <hr>
 
-                    <hr>
-                    <h5>Mô tả sản phẩm</h5>
-                    <p th:text="${product.description}">Detailed product description goes here...</p>
-                    <hr>
+                        <!-- Form thêm vào giỏ hàng -->
+                        <form th:action="@{/cart/add}" method="post" id="add-to-cart-form">
+                            <input type="hidden" name="productId" th:value="${product.productId}" />
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-                    <!-- **MODIFIED:** Added CSRF token input -->
-                    <!-- Trong product/detail.html -->
-<!-- **KIỂM TRA VÀ ĐẢM BẢO CÓ method="post"** -->
-<form th:action="@{/cart/add}" method="post">
-    <input type="hidden" name="productId" th:value="${product.productId}" />
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-     <div class="mb-3">
-         <label for="quantity" class="form-label fw-bold">Số lượng:</label>
-         <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="10" style="width: 80px;" required>
-     </div>
-     <button type="submit" class="btn btn-success btn-lg shadow-sm">
-         <i class="bi bi-cart-plus-fill me-2"></i> Thêm vào giỏ hàng
-     </button>
-</form>
+                            <!-- === PHẦN CHỌN SIZE (chỉ hiển thị nếu có size) === -->
+                            <div class="mb-3" th:if="${product.sizeOptions != null and !product.sizeOptions.isEmpty()}">
+                                <label class="form-label fw-bold d-block mb-2">Chọn kích thước:</label>
+                                <!-- Dùng radio buttons -->
+                                <div th:each="entry, iterStat : ${product.sizeOptions.entrySet()}" class="form-check form-check-inline size-option mb-2">
+                                     <!-- Đặt checked cho phần tử đầu tiên làm mặc định -->
+                                     <input class="form-check-input" type="radio" name="selectedSize"
+                                            th:id="'size_' + ${iterStat.index}"
+                                            th:value="${entry.key}"
+                                            th:checked="${iterStat.index == 0}" required> <!-- required để bắt buộc chọn -->
+                                     <label class="form-check-label" th:for="'size_' + ${iterStat.index}">
+                                         <span th:text="${entry.key}">Size Name</span>
+                                         <span class="size-price currency"
+                                               th:if="${entry.value != null}"
+                                               th:text="${#numbers.formatDecimal(entry.value, 0, 'COMMA', 0, 'POINT')}">
+                                         </span>
+                                     </label>
+                                </div>
+                                 <!-- Có thể thêm hiển thị lỗi nếu không chọn size -->
+                            </div>
+                            <!-- === KẾT THÚC PHẦN CHỌN SIZE === -->
 
-                     <div class="mt-4">
-                         <a th:href="@{/products}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
-                     </div>
-                </div>
+
+                            <!-- Input số lượng -->
+                             <div class="mb-3">
+                                 <label for="quantity" class="form-label fw-bold">Số lượng:</label>
+                                 <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="10" style="width: 90px;" required>
+                             </div>
+
+                             <!-- Nút Thêm vào giỏ -->
+                             <!-- Kiểm tra isAvailable trước khi cho phép thêm -->
+                             <button type="submit" class="btn btn-success btn-lg shadow-sm" th:if="${product.isAvailable}">
+                                 <i class="bi bi-cart-plus-fill me-2"></i> Thêm vào giỏ hàng
+                             </button>
+                             <button type="button" class="btn btn-secondary btn-lg shadow-sm disabled" th:unless="${product.isAvailable}">
+                                  <i class="bi bi-x-circle-fill me-2"></i> Hết hàng
+                             </button>
+                        </form> <!-- Kết thúc form -->
+
+                        <!-- Nút quay lại -->
+                         <div class="mt-4">
+                             <a th:href="@{/products}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
+                         </div>
+                    </div> <!-- Kết thúc col-md-6 thông tin -->
+                </div> <!-- Kết thúc row -->
+            </div> <!-- Kết thúc th:if="${product}" -->
+
+            <!-- Thông báo nếu không tìm thấy sản phẩm -->
+            <div th:if="${product == null}" class="alert alert-warning text-center" role="alert">
+                <h2 class="alert-heading">Không tìm thấy sản phẩm!</h2>
+                <p>Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+                <hr>
+                <a th:href="@{/products}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
             </div>
-        </div>
+        </main>
 
-        <!-- This part is generally unreachable if using orElseThrow in the controller,
-             but kept for robustness or if error handling changes. -->
-        <div th:if="${product == null}" class="alert alert-warning text-center" role="alert">
-            <h2 class="alert-heading">Không tìm thấy sản phẩm!</h2>
-            <p>Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
-            <hr>
-            <a th:href="@{/products}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
-        </div>
-    </main>
+        <!-- Include Footer -->
+        <div th:replace="~{fragments/footer :: footer}"></div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+        <!-- Bootstrap JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <!-- Optional: JavaScript để cập nhật giá khi chọn size -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const sizeRadios = document.querySelectorAll('input[name="selectedSize"]');
+                const priceDisplay = document.querySelector('.product-price'); // Giả sử giá mặc định ở đây
+
+                if (sizeRadios.length > 0 && priceDisplay) {
+                    // Ẩn giá mặc định ban đầu nếu có size
+                    priceDisplay.style.display = 'none';
+
+                    function updatePriceDisplay() {
+                        // Hiện tại chỉ ẩn giá mặc định, giá của size đã hiển thị cạnh radio
+                        // Nếu muốn cập nhật một chỗ hiển thị giá chính thì làm ở đây
+                    }
+
+                    sizeRadios.forEach(radio => {
+                        radio.addEventListener('change', updatePriceDisplay);
+                    });
+
+                    // Cập nhật lần đầu khi tải trang (dựa vào radio được check mặc định)
+                    updatePriceDisplay();
+                }
+            });
+        </script>
+    </div> <!-- layout:fragment="content" -->
 </body>
 </html>

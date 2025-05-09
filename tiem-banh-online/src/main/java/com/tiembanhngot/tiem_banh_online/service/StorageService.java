@@ -1,5 +1,6 @@
 package com.tiembanhngot.tiem_banh_online.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -11,6 +12,7 @@ import java.nio.file.*;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class StorageService {
 
     private final Path rootLocation;
@@ -30,25 +32,59 @@ public class StorageService {
         if (file.isEmpty()) {
             throw new IOException("Failed to store empty file.");
         }
+        // Làm sạch tên file gốc để tránh các ký tự đặc biệt hoặc đường dẫn
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+        // Kiểm tra cơ bản chống directory traversal attack
         if (originalFilename.contains("..")) {
-            // Security check
             throw new IOException("Cannot store file with relative path outside current directory " + originalFilename);
         }
 
-        // Tạo tên file duy nhất
+        // Tạo tên file duy nhất để tránh trùng lặp và vấn đề bảo mật với tên gốc
         String fileExtension = StringUtils.getFilenameExtension(originalFilename);
         String uniqueFilename = UUID.randomUUID().toString() + "." + fileExtension;
-        Path destinationFile = this.rootLocation.resolve(uniqueFilename).normalize().toAbsolutePath();
 
-        if (!destinationFile.getParent().equals(this.rootLocation.toAbsolutePath())) {
-            // Security check
-             throw new IOException("Cannot store file outside current directory.");
+        // Tính toán đường dẫn đích đầy đủ
+        Path destinationFile = this.rootLocation.resolve(uniqueFilename);
+
+        // === THAY THẾ KHỐI KIỂM TRA AN NINH ===
+        try {
+            // Chuẩn hóa đường dẫn đích và đường dẫn gốc để so sánh đáng tin cậy
+            Path normalizedDestination = destinationFile.normalize().toAbsolutePath();
+            Path normalizedRoot = this.rootLocation.normalize().toAbsolutePath();
+
+            // Log để debug (có thể xóa sau khi hoạt động)
+            log.debug("Normalized Root Path: {}", normalizedRoot);
+            log.debug("Normalized Destination Path: {}", normalizedDestination);
+            log.debug("Destination Parent: {}", normalizedDestination.getParent());
+
+            // Kiểm tra xem đường dẫn đích có thực sự nằm BÊN TRONG thư mục gốc không
+            if (!normalizedDestination.startsWith(normalizedRoot)) {
+                 log.error("Security check failed: Destination path '{}' is outside the root storage directory '{}'",
+                           normalizedDestination, normalizedRoot);
+                 throw new IOException("Cannot store file outside current directory.");
+            }
+            // Kiểm tra thêm để đảm bảo nó nằm TRỰC TIẾP trong thư mục gốc, không phải thư mục con sâu hơn
+            // (Quan trọng để ngăn tạo thư mục con bằng tên file)
+             if (!normalizedDestination.getParent().equals(normalizedRoot)) {
+                  log.error("Security check failed: Destination path '{}' is not directly inside the root storage directory '{}'",
+                            normalizedDestination, normalizedRoot);
+                  throw new IOException("Cannot store file in a subdirectory via filename manipulation.");
+             }
+        } catch (InvalidPathException e) {
+            // Bắt lỗi nếu tên file tạo ra đường dẫn không hợp lệ
+            log.error("Invalid path generated for filename '{}': {}", uniqueFilename, e.getMessage());
+            throw new IOException("Invalid path sequence for file " + originalFilename, e);
         }
+        // === KẾT THÚC THAY THẾ ===
 
+        // Thực hiện copy file
         try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
+            log.info("File stored successfully at: {}", destinationFile);
             return uniqueFilename; // Trả về tên file đã lưu
+        } catch (IOException e) {
+             log.error("Failed to store file '{}' due to IO error: {}", uniqueFilename, e.getMessage());
+             throw new IOException("Failed to store file " + originalFilename, e);
         }
     }
 

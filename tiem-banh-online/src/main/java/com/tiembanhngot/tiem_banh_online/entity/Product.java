@@ -1,17 +1,20 @@
 package com.tiembanhngot.tiem_banh_online.entity;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString; // Optional
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Objects; // For equals/hashCode
 import java.util.List; // For gallery_urls later
+import java.util.HashMap;
 import java.util.Map; // For size_options later
-
+import java.util.Objects;
 /**
  * Represents a product available for sale.
  */
@@ -25,7 +28,7 @@ import java.util.Map; // For size_options later
 })
 @Getter
 @Setter
-@ToString(exclude = "category") // Avoid issues with lazy loading Category
+@ToString(exclude = {"category", "sizeOptions"}) // Avoid issues with lazy loading Category
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +51,14 @@ public class Product {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl; // Main representative image URL
+    // === THÊM TRƯỜNG MỚI CHO SIZE ===
+    @Type(JsonBinaryType.class) // Sử dụng kiểu JSONB của hypersistence-utils
+    @Column(name = "size_options", columnDefinition = "jsonb") // Định nghĩa cột là jsonb trong DB
+    private Map<String, BigDecimal> sizeOptions = new HashMap<>(); // Khởi tạo Map rỗng
+    // Key: Tên Size (vd: "Nhỏ", "Vừa", "Lớn", "18cm", "20cm")
+    // Value: Giá tuyệt đối cho size đó (vd: 300000.00, 380000.00)
+    // === KẾT THÚC PHẦN THÊM ===
+
 
     // Future enhancements:
     // @Column(name = "gallery_urls", columnDefinition = "text[]") // PostgreSQL specific array

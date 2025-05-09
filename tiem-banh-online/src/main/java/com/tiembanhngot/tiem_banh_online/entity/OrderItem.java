@@ -42,9 +42,10 @@ private Product product;
     @Column(name = "price_at_purchase", nullable = false, precision = 10, scale = 2)
     private BigDecimal priceAtPurchase; // Stores the price when the order was placed
 
-    @Column(name = "size_at_purchase", length = 50) // Example: if products have sizes
-    private String sizeAtPurchase; // Stores the size when the order was placed
 
+// === THÊM TRƯỜNG NÀY ===
+@Column(name = "size_at_purchase", length = 100) // Tăng độ dài nếu cần
+private String sizeAtPurchase;
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

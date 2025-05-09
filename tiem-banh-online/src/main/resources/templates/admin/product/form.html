@@ -77,7 +77,44 @@
                            <div class="invalid-feedback" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
                         </div>
                     </div>
-
+                    <!-- Trong admin/product/form.html, sau phần Giá -->
+<hr>
+<h5>Tùy chọn Kích thước & Giá (Để trống nếu dùng giá mặc định)</h5>
+<!-- Cặp 1 -->
+<div class="row mb-2 gx-2">
+    <div class="col">
+        <label class="form-label form-label-sm">Tên Size 1</label>
+        <!-- Cần đặt tên input theo cấu trúc để Controller có thể parse -->
+        <input type="text" name="sizeOptions_name_1" class="form-control form-control-sm" th:value="${product.sizeOptions?.get('key1')}"> <!-- Ví dụ lấy key1, cần logic phức tạp hơn -->
+    </div>
+    <div class="col">
+        <label class="form-label form-label-sm">Giá Size 1 (₫)</label>
+        <input type="number" step="1000" name="sizeOptions_price_1" class="form-control form-control-sm" th:value="${product.sizeOptions?.get('value1')}">
+    </div>
+</div>
+ <!-- Cặp 2 -->
+<div class="row mb-2 gx-2">
+     <div class="col">
+        <label class="form-label form-label-sm">Tên Size 2</label>
+        <input type="text" name="sizeOptions_name_2" class="form-control form-control-sm">
+    </div>
+    <div class="col">
+        <label class="form-label form-label-sm">Giá Size 2 (₫)</label>
+        <input type="number" step="1000" name="sizeOptions_price_2" class="form-control form-control-sm">
+    </div>
+</div>
+<!-- Cặp 3 -->
+ <div class="row mb-3 gx-2">
+     <div class="col">
+        <label class="form-label form-label-sm">Tên Size 3</label>
+        <input type="text" name="sizeOptions_name_3" class="form-control form-control-sm">
+    </div>
+    <div class="col">
+        <label class="form-label form-label-sm">Giá Size 3 (₫)</label>
+        <input type="number" step="1000" name="sizeOptions_price_3" class="form-control form-control-sm">
+    </div>
+</div>
+<hr>
                      <!-- Danh Mục -->
                      <div class="mb-3 row">
                         <label for="category" class="col-sm-3 col-form-label required-field">Danh Mục</label>
@@ -122,7 +159,7 @@
                              </div>
                         </div>
                     </div>
-
+                    <input type="hidden" name="currentImageUrl" th:if="${product.productId != null}" th:value="${product.imageUrl}" />
                     <!-- Nút bấm -->
                      <div class="row mt-4">
                          <div class="col-sm-9 offset-sm-3">

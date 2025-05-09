@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Optional, nếu có thao tác DB phức tạp hơn
-
+import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.Map; // Sử dụng Map
 import java.util.LinkedHashMap; // Để giữ thứ tự
@@ -75,7 +75,7 @@ public class CartService {
      * @throws IllegalArgumentException Nếu sản phẩm không có sẵn hoặc số lượng không hợp lệ.
      */
     @Transactional(readOnly = true) // Chỉ đọc product, không thay đổi DB ở đây
-    public void addToCart(Long productId, int quantity, HttpSession session) {
+    public void addToCart(Long productId, int quantity, String selectedSize, HttpSession session) {
         if (quantity <= 0) {
             log.warn("Attempted to add non-positive quantity ({}) for product ID: {}. Ignoring.", quantity, productId);
             throw new IllegalArgumentException("Số lượng phải lớn hơn 0."); // Ném lỗi để controller xử lý
@@ -97,10 +97,48 @@ public class CartService {
               log.error("Product ID: {} ('{}') has a NULL price. Cannot add to cart.", productId, product.getName());
               throw new IllegalStateException("Sản phẩm '" + product.getName() + "' đang gặp lỗi về giá. Vui lòng liên hệ hỗ trợ.");
          }
+        // --- XÁC ĐỊNH GIÁ DỰA TRÊN SIZE ---
+    BigDecimal priceToUse = product.getPrice(); // Mặc định dùng giá gốc
+    String sizeIdentifier = selectedSize; // Size để lưu vào DTO
+
+    // Kiểm tra xem sản phẩm có tùy chọn size không và người dùng có chọn size không
+    if (StringUtils.hasText(selectedSize) && product.getSizeOptions() != null && !product.getSizeOptions().isEmpty()) {
+        if (product.getSizeOptions().containsKey(selectedSize)) {
+            // Lấy giá từ map size
+            priceToUse = product.getSizeOptions().get(selectedSize);
+            log.debug("Using price for selected size '{}': {}", selectedSize, priceToUse);
+            // Kiểm tra giá của size có null không
+             if (priceToUse == null) {
+                  log.error("Price for selected size '{}' of product ID {} is NULL.", selectedSize, productId);
+                  throw new IllegalStateException("Sản phẩm '" + product.getName() + "' đang gặp lỗi về giá cho size đã chọn.");
+             }
+        } else {
+            // Người dùng chọn size không hợp lệ -> Dùng giá mặc định và cảnh báo
+            log.warn("Invalid size '{}' selected for product ID {}. Using default price {}.", selectedSize, productId, product.getPrice());
+            sizeIdentifier = null; // Không lưu size không hợp lệ
+            priceToUse = product.getPrice(); // Đảm bảo dùng giá mặc định
+             if (priceToUse == null) { // Kiểm tra lại giá mặc định
+                  log.error("Default price for product ID {} is NULL.", productId);
+                  throw new IllegalStateException("Sản phẩm '" + product.getName() + "' đang gặp lỗi về giá.");
+             }
+        }
+    } else {
+         // Không chọn size hoặc sản phẩm không có size -> dùng giá mặc định
+         log.debug("No valid size selected or product has no size options. Using default price {}.", product.getPrice());
+         sizeIdentifier = null;
+         priceToUse = product.getPrice();
+         if (priceToUse == null) {
+              log.error("Default price for product ID {} is NULL.", productId);
+              throw new IllegalStateException("Sản phẩm '" + product.getName() + "' đang gặp lỗi về giá.");
+         }
+    }
+    // --- KẾT THÚC XÁC ĐỊNH GIÁ ---
+
+        
 
 
-        CartItemDTO existingItem = cart.getItems().get(productId);
-
+    String itemKey = productId + (sizeIdentifier != null ? "_" + sizeIdentifier : ""); // Tạo key String
+CartItemDTO existingItem = cart.getItems().get(itemKey);
         if (existingItem != null) {
             // Sản phẩm đã có, cập nhật số lượng
             log.debug("Updating quantity for existing product ID {} in cart [Session: {}]. Old quantity: {}, Add quantity: {}",
@@ -109,16 +147,15 @@ public class CartService {
         } else {
             // Sản phẩm mới, thêm vào giỏ
             log.debug("Adding new product ID {} to cart [Session: {}] with quantity: {}", productId, session.getId(), quantity);
-            CartItemDTO newItem = new CartItemDTO(
-                product.getProductId(),
-                product.getName(),
-                product.getImageUrl(),
-                product.getPrice(), // Lấy giá hiện tại từ DB
-                quantity,
-                BigDecimal.ZERO, // LineTotal sẽ được tính trong updateCartTotals
-                product.getSlug() // Lưu slug để tạo link
-            );
-            cart.getItems().put(productId, newItem);
+            CartItemDTO newItem = new CartItemDTO();
+        newItem.setProductId(product.getProductId());
+        newItem.setName(product.getName());
+        newItem.setImageUrl(product.getImageUrl());
+        newItem.setPrice(priceToUse); // <<< SỬ DỤNG GIÁ ĐÃ XÁC ĐỊNH
+        newItem.setQuantity(quantity);
+        newItem.setSlug(product.getSlug());
+        newItem.setSelectedSize(sizeIdentifier); // <<< LƯU SIZE ĐÃ CHỌN
+        cart.getItems().put(itemKey, newItem); // Key có thể cần bao gồm cả size
         }
 
         // Tính toán lại tổng tiền và số lượng
