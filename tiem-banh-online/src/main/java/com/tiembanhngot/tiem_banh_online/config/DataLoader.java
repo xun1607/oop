@@ -19,7 +19,6 @@ import java.util.Optional;
 @Slf4j
 public class DataLoader implements CommandLineRunner {
 
-    private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
@@ -66,12 +65,8 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Loading initial data...");
 
-        // 1. Tạo Roles
-        Role adminRole = createRoleIfNotFound("ADMIN"); // Chuẩn hóa tên Role
-        Role customerRole = createRoleIfNotFound("CUSTOMER");
-
         // 2. Tạo User Admin
-        createUserIfNotFound("admin@tiembanh.com", "Admin User", "Admin123", "0900000000", adminRole);
+        createUserIfNotFound("admin@tiembanh.com", "Admin User", "Admin123", "0900000000", User.Role.ADMIN);
         // createUserIfNotFound("customer@email.com", "Customer Name", "Cust123", "0911111111", customerRole);
 
         // 3. Tạo Categories
@@ -158,23 +153,8 @@ public class DataLoader implements CommandLineRunner {
         log.info("Finished loading initial data.");
     }
 
-
-    // --- Helper Methods ---
-
     @Transactional
-    Role createRoleIfNotFound(String roleName) {
-        Optional<Role> roleOpt = roleRepository.findByRoleName(roleName);
-        if (roleOpt.isEmpty()) {
-            Role newRole = new Role();
-            newRole.setRoleName(roleName);
-            log.info("Creating role: {}", roleName);
-            return roleRepository.save(newRole);
-        }
-        return roleOpt.get();
-    }
-
-    @Transactional
-    User createUserIfNotFound(String email, String fullName, String rawPassword, String phone, Role role) {
+    User createUserIfNotFound(String email, String fullName, String rawPassword, String phone, User.Role role) {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             User newUser = new User();
