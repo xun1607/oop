@@ -2,9 +2,10 @@ package com.tiembanhngot.tiem_banh_online.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
-
+@Getter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

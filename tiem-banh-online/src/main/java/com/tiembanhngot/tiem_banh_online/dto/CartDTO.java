@@ -1,11 +1,12 @@
 package com.tiembanhngot.tiem_banh_online.dto;
 
 import lombok.Data;
+import lombok.Getter;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap; // **Dùng LinkedHashMap để giữ thứ tự thêm vào**
 import java.util.Map;
 import java.util.Collection; // Import Collection
-
+@Getter
 @Data
 public class CartDTO {
     // Dùng Map<ProductId, CartItemDTO> để truy cập item nhanh hơn
