@@ -1,21 +1,21 @@
 package com.tiembanhngot.tiem_banh_online.entity;
 
-import jakarta.persistence.*;
+import java.util.Objects;
+import java.util.Set;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString; // Optional: for debugging
+import lombok.ToString; 
 
-import java.util.Objects; // For equals/hashCode
-import java.util.Set; // Will be used later for @OneToMany
-
-/**
- * Represents a product category (e.g., Banh Kem, Pastry).
- */
 @Entity
-// Add index for the frequently queried 'slug' column
-@Table(name = "categories", indexes = {
-        @Index(name = "idx_category_slug", columnList = "slug", unique = true)
-})
+
 @Getter
 @Setter
 @ToString(exclude = "products") // Avoid potential issues if products relationship is added later
@@ -31,10 +31,6 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 120, unique = true, nullable = false)
-    private String slug; // URL-friendly identifier
-
-    // Relationship to Products (will be added later)
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private Set<Product> products;
 
@@ -43,14 +39,14 @@ public class Category {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Category category = (Category) o;
-        // Use categoryId for equality check if it's not null (persistent entity)
-        return categoryId != null && Objects.equals(categoryId, category.categoryId);
+        return categoryId != null && Objects.equals(categoryId, category.categoryId); // so sanh va tim kiem bang categoryID
     }
 
     @Override
     public int hashCode() {
-         // Use categoryId for hash code if it's not null, otherwise use object's identity hash code
-         return categoryId != null ? Objects.hash(categoryId) : System.identityHashCode(this);
-         // Or simply: return getClass().hashCode(); for persisted entities. Be consistent with equals.
+         if (categoryId != null){
+            return Objects.hash(categoryId);
+         }
+         else return System.identityHashCode(this);
     }
 }

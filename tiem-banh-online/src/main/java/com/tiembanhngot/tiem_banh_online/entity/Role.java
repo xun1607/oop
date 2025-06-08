@@ -1,12 +1,17 @@
 package com.tiembanhngot.tiem_banh_online.entity;
 
-import jakarta.persistence.*;
+import java.util.Objects;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString; // Optional
-
-import java.util.Objects; // For equals/hashCode
-import java.util.Set; // Will be used later for @OneToMany
+import lombok.ToString;
 
 /**
  * Represents a user role (e.g., ADMIN, CUSTOMER).
