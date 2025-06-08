@@ -1,28 +1,28 @@
 package com.tiembanhngot.tiem_banh_online.dto;
 
-import jakarta.validation.constraints.*; // Import các annotation validation
-import lombok.Data;
+import jakarta.validation.constraints.*; 
+import lombok.Data;               
 
-@Data
+@Data 
 public class UserRegisterDTO {
 
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không đúng định dạng")
-    @Size(max = 255, message = "Email quá dài")
+    @NotBlank(message = "Email cannot be empty")
+    @Email(message = "Email is not in a valid format")
+    @Size(max = 255, message = "Email is too long")
     private String email;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
-    @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
+    @NotBlank(message = "Password cannot be empty")
+    @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
-    @NotBlank(message = "Xác nhận mật khẩu không được để trống")
-    private String confirmPassword;
+    @NotBlank(message = "Confirm password cannot be empty")
+    private String confirmPassword; 
 
-    @NotBlank(message = "Họ tên không được để trống")
-    @Size(max = 100, message = "Họ tên quá dàia")
+    @NotBlank(message = "Full name cannot be empty")
+    @Size(max = 100, message = "Full name is too long")
     private String fullName;
 
-    @Pattern(regexp = "^(\\+84|0)\\d{9,10}$", message = "Số điện thoại không hợp lệ") // Regex cơ bản cho SĐT VN
-    @Size(max = 20, message = "Số điện thoại quá dài")
+    @Pattern(regexp = "^(\\+84|0)\\d{9,10}$", message = "Phone number is invalid")
+    @Size(max = 20, message = "Phone number is too long") 
     private String phoneNumber;
 }
