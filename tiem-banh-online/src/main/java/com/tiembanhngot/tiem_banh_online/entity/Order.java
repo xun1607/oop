@@ -46,7 +46,7 @@ public class Order {
     @Column(name = "order_code", length = 20, unique = true, nullable = false)
     private String orderCode; 
 
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY fetch User details unless needed
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "user_id") 
     private User user;
 
@@ -97,7 +97,7 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<OrderItem> orderItems = new HashSet<>(); 
 
-    // --- Helper methods for managing bidirectional relationship ---
+    
     public void addOrderItem(OrderItem item) {
         orderItems.add(item);
         item.setOrder(this);
@@ -107,7 +107,7 @@ public class Order {
         orderItems.remove(item);
         item.setOrder(null);
     }
-    // --- End Helper Methods ---
+    
 
     @Override
     public boolean equals(Object o) {

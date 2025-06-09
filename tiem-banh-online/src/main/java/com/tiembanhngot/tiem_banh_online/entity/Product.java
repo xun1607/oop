@@ -2,33 +2,25 @@ package com.tiembanhngot.tiem_banh_online.entity;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString; // Optional
+import lombok.*;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Objects; // For equals/hashCode
-import java.util.List; // For gallery_urls later
+import java.util.Objects; 
 import java.util.HashMap;
-import java.util.Map; // For size_options later
-import java.util.Objects;
-/**
- * Represents a product available for sale.
- */
+import java.util.Map; 
+
 @Entity
-// Add indexes for commonly queried/filtered/sorted columns
-@Table(name = "products", indexes = {
-        @Index(name = "idx_product_slug", columnList = "slug", unique = true),
-        @Index(name = "idx_product_category_id", columnList = "category_id"),
-        @Index(name = "idx_product_is_available", columnList = "is_available"),
-         @Index(name = "idx_product_created_at", columnList = "created_at") // For sorting by newest
-})
+@NoArgsConstructor
 @Getter
 @Setter
-@ToString(exclude = {"category", "sizeOptions"}) // Avoid issues with lazy loading Category
+@Table(name = "products", indexes = {
+        @Index(name = "idx_product_slug", columnList = "slug", unique = true),
+        @Index(name = "idx_product_category_id", columnList = "category_id")
+})
+@ToString(exclude = {"category", "sizeOptions"}) 
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,38 +33,24 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price; // Base price
-
-    // Future enhancements:
-    //@Column(name = "size_options", columnDefinition = "jsonb")
-    // @Type(JsonBinaryType.class) // Requires hypersistence-utils dependency
-    //private Map<String, BigDecimal> sizeOptions; // e.g., {"small": 300000, "large": 450000}
+    @Column(nullable = false)
+    private BigDecimal price; 
 
     @Column(name = "image_url", length = 500)
-    private String imageUrl; // Main representative image URL
-    // === THÊM TRƯỜNG MỚI CHO SIZE ===
-    @Type(JsonBinaryType.class) // Sử dụng kiểu JSONB của hypersistence-utils
-    @Column(name = "size_options", columnDefinition = "jsonb") // Định nghĩa cột là jsonb trong DB
-    private Map<String, BigDecimal> sizeOptions = new HashMap<>(); // Khởi tạo Map rỗng
-    // Key: Tên Size (vd: "Nhỏ", "Vừa", "Lớn", "18cm", "20cm")
-    // Value: Giá tuyệt đối cho size đó (vd: 300000.00, 380000.00)
-    // === KẾT THÚC PHẦN THÊM ===
+    private String imageUrl;
 
-
-    // Future enhancements:
-    // @Column(name = "gallery_urls", columnDefinition = "text[]") // PostgreSQL specific array
-    // @Type(ListArrayType.class) // Requires hypersistence-utils dependency
-    // private List<String> galleryUrls; // URLs for additional images
-
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY fetch category details unless needed
-    @JoinColumn(name = "category_id") // Foreign key column in 'products' table
+    @Type(JsonBinaryType.class) 
+    @Column(name = "size_options", columnDefinition = "jsonb") 
+    private Map<String, BigDecimal> sizeOptions = new HashMap<>(); 
+   
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "category_id") 
     private Category category;
 
     @Column(name = "is_available", nullable = false)
-    private Boolean isAvailable = true; // Default value, indicates if product is for sale
+    private Boolean isAvailable = true; 
 
-    @Column(length = 270, unique = true, nullable = false) // Length slightly > name for suffixes if needed
+    @Column(length = 270, unique = true, nullable = false) 
     private String slug; // URL-friendly unique identifier
 
     @CreationTimestamp
@@ -88,14 +66,11 @@ public class Product {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        // Use productId if not null
         return productId != null && Objects.equals(productId, product.productId);
     }
 
     @Override
     public int hashCode() {
-         // Use productId if not null
-        return productId != null ? Objects.hash(productId) : System.identityHashCode(this);
-        // Or simply: return getClass().hashCode(); for persisted entities.
+        return (productId != null) ? productId.hashCode() : 0;
     }
 }
