@@ -1,18 +1,24 @@
 package com.tiembanhngot.tiem_banh_online.config;
 
-import com.tiembanhngot.tiem_banh_online.entity.*;
-import com.tiembanhngot.tiem_banh_online.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import com.tiembanhngot.tiem_banh_online.entity.Category;
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.entity.User;
+import com.tiembanhngot.tiem_banh_online.repository.CategoryRepository;
+import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
+import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -169,19 +175,7 @@ public class DataLoader implements CommandLineRunner {
         return userOpt.get();
     }
 
-    @Transactional
-    Category createCategoryIfNotFound(String name, String description, String slug) {
-         Optional<Category> catOpt = categoryRepository.findBySlug(slug);
-         if (catOpt.isEmpty()) {
-             Category newCategory = new Category();
-             newCategory.setName(name);
-             newCategory.setDescription(description);
-             newCategory.setSlug(slug);
-             log.info("Creating category: {}", name);
-             return categoryRepository.save(newCategory);
-         }
-         return catOpt.get();
-    }
+    
 
      @Transactional
      Product createProductIfNotFound(String name, String slug, String description, BigDecimal price, String imageUrl, Category category) {
@@ -200,4 +194,16 @@ public class DataLoader implements CommandLineRunner {
          }
          return prodOpt.get();
      }
+    @Transactional
+    Category createCategoryIfNotFound(String name, String description, String slug) {
+         Optional<Category> catOpt = categoryRepository.findBySlug(slug);
+         if (catOpt.isEmpty()) {
+             Category newCategory = new Category();
+             newCategory.setName(name);
+             newCategory.setDescription(description);
+             log.info("Creating category: {}", name);
+             return categoryRepository.save(newCategory);
+         }
+         return catOpt.get();
+    }
 }

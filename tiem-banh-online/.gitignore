@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# === IGNORE LOCAL CONFIGURATION ===
+# This file contains sensitive data and local setup
+tiem-banh-online/src/main/resources/application.properties

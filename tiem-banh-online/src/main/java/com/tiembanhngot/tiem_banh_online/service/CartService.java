@@ -153,7 +153,6 @@ CartItemDTO existingItem = cart.getItems().get(itemKey);
         newItem.setImageUrl(product.getImageUrl());
         newItem.setPrice(priceToUse); // <<< SỬ DỤNG GIÁ ĐÃ XÁC ĐỊNH
         newItem.setQuantity(quantity);
-        newItem.setSlug(product.getSlug());
         newItem.setSelectedSize(sizeIdentifier); // <<< LƯU SIZE ĐÃ CHỌN
         cart.getItems().put(itemKey, newItem); // Key có thể cần bao gồm cả size
         }
