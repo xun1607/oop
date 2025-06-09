@@ -18,7 +18,7 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@ToString(exclude = "products") // Avoid potential issues if products relationship is added later
+@ToString(exclude = "products") 
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

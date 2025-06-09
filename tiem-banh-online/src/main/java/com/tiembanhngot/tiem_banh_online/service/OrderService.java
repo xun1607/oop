@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +71,7 @@ public class OrderService {
             }
             orderItem.setProduct(product);
             orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setSizeAtPurchase(cartItem.getSelectedSize());
             order.addOrderItem(orderItem);
@@ -133,7 +136,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Order> findOrderDetailsById(Long id) {
+    public Optional<Order> findOrderDetailsById(Long id) {  //tim thong tin order bang id
         log.debug("Admin: Fetching order details for ID: {}", id);
          Optional<Order> orderOpt = orderRepository.findById(id);
          orderOpt.ifPresent(order -> {
