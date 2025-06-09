@@ -18,4 +18,5 @@ public class OrderDTO {
     private String shippingAddress;
 
     private String notes;
+    private String paymentMethod;
 }

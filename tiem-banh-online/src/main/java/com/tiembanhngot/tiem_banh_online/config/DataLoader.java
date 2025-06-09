@@ -12,11 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
-import com.tiembanhngot.tiem_banh_online.entity.Role;
 import com.tiembanhngot.tiem_banh_online.entity.User;
 import com.tiembanhngot.tiem_banh_online.repository.CategoryRepository;
 import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
-import com.tiembanhngot.tiem_banh_online.repository.RoleRepository;
 import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -196,4 +194,16 @@ public class DataLoader implements CommandLineRunner {
          }
          return prodOpt.get();
      }
+    @Transactional
+    Category createCategoryIfNotFound(String name, String description, String slug) {
+         Optional<Category> catOpt = categoryRepository.findBySlug(slug);
+         if (catOpt.isEmpty()) {
+             Category newCategory = new Category();
+             newCategory.setName(name);
+             newCategory.setDescription(description);
+             log.info("Creating category: {}", name);
+             return categoryRepository.save(newCategory);
+         }
+         return catOpt.get();
+    }
 }
