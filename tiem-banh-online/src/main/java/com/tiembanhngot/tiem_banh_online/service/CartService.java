@@ -198,9 +198,6 @@ public class CartService {
         return getCart(session).getTotalAmount();
     }
 
-   
-    
-
 
     private void updateCartTotals(CartDTO cart) {
         if (cart == null) {
@@ -216,7 +213,7 @@ public class CartService {
             for (CartItemDTO item : cart.getItems().values()) {
                 if (item != null && item.getPrice() != null && item.getQuantity() > 0) {
                     try {
-                        BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                        BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())); // gia ca * so luong
                         item.setLineTotal(lineTotal);
                         calculatedTotalAmount = calculatedTotalAmount.add(lineTotal);
                         calculatedTotalItems += item.getQuantity();

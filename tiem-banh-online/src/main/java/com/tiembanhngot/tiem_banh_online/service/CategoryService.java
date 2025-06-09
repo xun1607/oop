@@ -17,14 +17,11 @@ import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-
 class CategoryNotFoundException extends RuntimeException {
     public CategoryNotFoundException(String message) {
         super(message);
     }
 }
-
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
