@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections; // Import Collections
-import java.util.stream.Collectors;
 
 
 @Service // Đánh dấu là Service Bean
@@ -34,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Giả sử User có thuộc tính 'role' là đối tượng Role với phương thức getRoleName()
         // Và Role có tên dạng 'admin', 'customer'
         Collection<? extends GrantedAuthority> authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName().toUpperCase()) // Quan trọng: Thêm tiền tố ROLE_
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name()) // Quan trọng: Thêm tiền tố ROLE_
         );
 
 
