@@ -1,25 +1,32 @@
 package com.tiembanhngot.tiem_banh_online.config;
 
-import com.tiembanhngot.tiem_banh_online.entity.*;
-import com.tiembanhngot.tiem_banh_online.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import com.tiembanhngot.tiem_banh_online.entity.Category;
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.entity.Role;
+import com.tiembanhngot.tiem_banh_online.entity.User;
+import com.tiembanhngot.tiem_banh_online.repository.CategoryRepository;
+import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
+import com.tiembanhngot.tiem_banh_online.repository.RoleRepository;
+import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class DataLoader implements CommandLineRunner {
 
-    private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
@@ -66,12 +73,8 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Loading initial data...");
 
-        // 1. Tạo Roles
-        Role adminRole = createRoleIfNotFound("ADMIN"); // Chuẩn hóa tên Role
-        Role customerRole = createRoleIfNotFound("CUSTOMER");
-
         // 2. Tạo User Admin
-        createUserIfNotFound("admin@tiembanh.com", "Admin User", "Admin123", "0900000000", adminRole);
+        createUserIfNotFound("admin@tiembanh.com", "Admin User", "Admin123", "0900000000", User.Role.ADMIN);
         // createUserIfNotFound("customer@email.com", "Customer Name", "Cust123", "0911111111", customerRole);
 
         // 3. Tạo Categories
@@ -158,23 +161,8 @@ public class DataLoader implements CommandLineRunner {
         log.info("Finished loading initial data.");
     }
 
-
-    // --- Helper Methods ---
-
     @Transactional
-    Role createRoleIfNotFound(String roleName) {
-        Optional<Role> roleOpt = roleRepository.findByRoleName(roleName);
-        if (roleOpt.isEmpty()) {
-            Role newRole = new Role();
-            newRole.setRoleName(roleName);
-            log.info("Creating role: {}", roleName);
-            return roleRepository.save(newRole);
-        }
-        return roleOpt.get();
-    }
-
-    @Transactional
-    User createUserIfNotFound(String email, String fullName, String rawPassword, String phone, Role role) {
+    User createUserIfNotFound(String email, String fullName, String rawPassword, String phone, User.Role role) {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             User newUser = new User();
@@ -189,19 +177,7 @@ public class DataLoader implements CommandLineRunner {
         return userOpt.get();
     }
 
-    @Transactional
-    Category createCategoryIfNotFound(String name, String description, String slug) {
-         Optional<Category> catOpt = categoryRepository.findBySlug(slug);
-         if (catOpt.isEmpty()) {
-             Category newCategory = new Category();
-             newCategory.setName(name);
-             newCategory.setDescription(description);
-             newCategory.setSlug(slug);
-             log.info("Creating category: {}", name);
-             return categoryRepository.save(newCategory);
-         }
-         return catOpt.get();
-    }
+    
 
      @Transactional
      Product createProductIfNotFound(String name, String slug, String description, BigDecimal price, String imageUrl, Category category) {

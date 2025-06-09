@@ -1,33 +1,41 @@
 package com.tiembanhngot.tiem_banh_online.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString; // Optional
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.HashSet; // Import HashSet
-import java.util.Objects; // For equals/hashCode
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-/**
- * Represents a customer order.
- */
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 @Entity
-// Add indexes for commonly queried columns
 @Table(name = "orders", indexes = {
         @Index(name = "idx_order_code", columnList = "order_code", unique = true),
         @Index(name = "idx_order_user_id", columnList = "user_id"),
         @Index(name = "idx_order_status", columnList = "status"),
-        @Index(name = "idx_order_created_at", columnList = "created_at") // Index for sorting/filtering by date
+        @Index(name = "idx_order_created_at", columnList = "created_at") 
 })
 @Getter
 @Setter
-@ToString(exclude = {"user", "orderItems"}) // Avoid infinite loops/large logs
+@ToString(exclude = {"user", "orderItems"}) 
 public class Order {
 
     @Id
@@ -36,10 +44,10 @@ public class Order {
     private Long orderId;
 
     @Column(name = "order_code", length = 20, unique = true, nullable = false)
-    private String orderCode; // Needs logic for generation
+    private String orderCode; 
 
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY fetch User details unless needed
-    @JoinColumn(name = "user_id") // Allow null for guest checkouts
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "user_id") 
     private User user;
 
     @Column(name = "recipient_name", length = 100, nullable = false)
@@ -52,31 +60,31 @@ public class Order {
     private String shippingAddress;
 
     @Column(name = "delivery_date")
-    private LocalDate deliveryDate; // Specific date
+    private LocalDate deliveryDate; 
 
     @Column(name = "delivery_time_slot", length = 50)
-    private String deliveryTimeSlot; // e.g., "9am-12pm"
+    private String deliveryTimeSlot; 
 
     @Column(columnDefinition = "TEXT")
-    private String notes; // Customer notes
+    private String notes; 
 
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
-    private BigDecimal totalAmount = BigDecimal.ZERO; // Subtotal of items
+    private BigDecimal totalAmount = BigDecimal.ZERO; 
 
     @Column(name = "shipping_fee", precision = 10, scale = 2)
-    private BigDecimal shippingFee = BigDecimal.ZERO; // Default shipping fee
+    private BigDecimal shippingFee = BigDecimal.ZERO; 
 
     @Column(name = "final_amount", nullable = false, precision = 12, scale = 2)
-    private BigDecimal finalAmount = BigDecimal.ZERO; // Total amount + shipping fee
+    private BigDecimal finalAmount = BigDecimal.ZERO; 
 
     @Column(length = 50, nullable = false)
-    private String status = "PENDING"; // Default status (e.g., PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+    private String status = "PENDING"; // trang thai don hang: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
 
     @Column(name = "payment_method", length = 50)
-    private String paymentMethod; // e.g., "COD", "VNPay"
+    private String paymentMethod; 
 
     @Column(name = "payment_status", length = 50, nullable = false)
-    private String paymentStatus = "UNPAID"; // Default payment status (e.g., UNPAID, PAID, FAILED)
+    private String paymentStatus = "UNPAID"; 
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -86,37 +94,34 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    // Relationship: 1 Order - Many OrderItems
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<OrderItem> orderItems = new HashSet<>(); // Initialize set to avoid NullPointerException
+    private Set<OrderItem> orderItems = new HashSet<>(); 
 
-    // --- Helper methods for managing bidirectional relationship ---
+    
     public void addOrderItem(OrderItem item) {
         orderItems.add(item);
         item.setOrder(this);
-        // Consider recalculating total amounts here or in a service layer
     }
 
     public void removeOrderItem(OrderItem item) {
         orderItems.remove(item);
         item.setOrder(null);
-        // Consider recalculating total amounts here or in a service layer
     }
-    // --- End Helper Methods ---
+    
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        // Use orderId if not null (persistent entities), otherwise rely on object identity
         return orderId != null && Objects.equals(orderId, order.orderId);
     }
 
     @Override
     public int hashCode() {
-        // Use a fixed value for transient entities, or the ID hashcode for persistent ones
-        return orderId != null ? Objects.hash(orderId) : System.identityHashCode(this);
-        // Or simply: return getClass().hashCode(); for persisted entities.
+        if(orderId != null){
+            return Objects.hash(orderId);
+        }
+        else return System.identityHashCode(this);
     }
 }

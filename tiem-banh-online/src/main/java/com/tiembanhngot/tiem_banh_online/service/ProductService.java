@@ -6,6 +6,8 @@ import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,17 +28,14 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 @Slf4j
 public class ProductService {
+    @Autowired
+    private ProductRepository productRepository;
 
-    private final ProductRepository productRepository;
     private final StorageService storageService;
-    // private final OrderItemRepository orderItemRepository;
 
     private static final Pattern NONLATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
 
-    // --- Phương thức cho trang người dùng ---
-
-    // Bỏ phương thức searchAvailableProducts nếu chưa cần
      @Transactional(readOnly = true)
     public List<Product> searchAvailableProducts(String query) {
         log.debug("Searching for available products with query: '{}'", query);
