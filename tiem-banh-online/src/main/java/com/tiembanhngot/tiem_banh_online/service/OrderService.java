@@ -8,6 +8,8 @@ import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +24,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-// DTO cho thông báo WebSocket (có thể đặt trong package dto)
+
 @lombok.Data @lombok.AllArgsConstructor @lombok.NoArgsConstructor
 class NewOrderNotificationDTO {
     private Long orderId;
@@ -35,13 +37,15 @@ class NewOrderNotificationDTO {
 @RequiredArgsConstructor
 @Slf4j
 public class OrderService {
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate; // dung de gui message den nguoi dung / admin
 
-    private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
-    private final SimpMessagingTemplate messagingTemplate; // Inject để gửi WebSocket
 
-    // --- Đặt hàng ---
-    @Transactional
+    @Transactional 
     public Order placeOrder(OrderDTO orderDto, CartDTO cart, User currentUser) {
         if (cart == null || cart.getItemList().isEmpty()) {
             throw new IllegalStateException("Giỏ hàng trống, không thể đặt hàng.");
@@ -52,7 +56,7 @@ public class OrderService {
         order.setRecipientPhone(orderDto.getRecipientPhone());
         order.setShippingAddress(orderDto.getShippingAddress());
         order.setNotes(orderDto.getNotes());
-        order.setUser(currentUser); // Có thể null nếu là khách
+        order.setUser(currentUser); 
         order.setOrderCode("HD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         for (var cartItem : cart.getItemList()) {
@@ -64,7 +68,7 @@ public class OrderService {
              }
             orderItem.setProduct(product);
             orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setPriceAtPurchase(cartItem.getPrice()); // Lấy giá từ CartItemDTO
+            orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setSizeAtPurchase(cartItem.getSelectedSize());
             order.addOrderItem(orderItem);
             log.debug("Added OrderItem: ProductId={}, Qty={}, Price={}, Size={}",
@@ -73,9 +77,9 @@ public class OrderService {
         }
 
         order.setTotalAmount(cart.getTotalAmount());
-        order.setShippingFee(calculateShippingFee(orderDto)); // Tính phí ship
+        order.setShippingFee(calculateShippingFee(orderDto));
         order.setFinalAmount(order.getTotalAmount().add(order.getShippingFee()));
-        order.setStatus("PENDING"); // Trạng thái chờ xử lý
+        order.setStatus("PENDING");
         order.setPaymentMethod(orderDto.getPaymentMethod());
         order.setPaymentStatus("UNPAID");
         
@@ -101,7 +105,6 @@ public class OrderService {
     }
 
      private BigDecimal calculateShippingFee(OrderDTO orderDto) {
-         // TODO: Implement logic tính phí ship phức tạp hơn nếu cần
          return new BigDecimal("25000"); // Phí ship cố định ví dụ
      }
 
@@ -131,23 +134,14 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Order> findOrderDetailsById(Long id) {
+    public Optional<Order> findOrderDetailsById(Long id) {  //tim thong tin order bang id
         log.debug("Admin: Fetching order details for ID: {}", id);
-        // Lấy order và fetch items cùng lúc để tránh LazyInitException
-        // Cách 1: Dùng findById và truy cập items trong transaction (service/controller) - Đơn giản nhất
-         Optional<Order> orderOpt = orderRepository.findById(id);
-         // Cách 2: Thêm method vào Repository với JOIN FETCH hoặc @EntityGraph
-         // Optional<Order> orderOpt = orderRepository.findByIdAndFetchItemsEagerly(id);
-         orderOpt.ifPresent(order -> {
-             // Touch a field to potentially initialize lazy collection if needed outside TX
-             // log.trace("Number of items in order {}: {}", id, order.getOrderItems().size());
-         });
+        Optional<Order> orderOpt = orderRepository.findById(id);
         return orderOpt;
     }
 
     @Transactional
-    public Order updateOrderStatus(Long orderId, String newStatus) {
-        log.info("Admin: Attempting to update status for order ID: {} to {}", orderId, newStatus);
+    public Order updateOrderStatus(Long orderId, String newStatus) { // cap nhat thong tin order
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
 
@@ -158,7 +152,7 @@ public class OrderService {
         log.info("Updating order status from {} to {}", order.getStatus(), newStatus);
         order.setStatus(newStatus);
 
-        // Logic cập nhật trạng thái thanh toán tự động
+        
         if ("DELIVERED".equalsIgnoreCase(newStatus) && !"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
             if ("COD".equalsIgnoreCase(order.getPaymentMethod())) {
                  order.setPaymentStatus("PAID");
