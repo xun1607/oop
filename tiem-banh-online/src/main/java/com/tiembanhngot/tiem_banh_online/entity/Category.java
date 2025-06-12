@@ -3,6 +3,7 @@ package com.tiembanhngot.tiem_banh_online.entity;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,9 +16,9 @@ import lombok.Setter;
 import lombok.ToString; 
 
 @Entity
-
 @Getter
 @Setter
+@Table(name = "categories")
 @ToString(exclude = "products") 
 public class Category {
     @Id

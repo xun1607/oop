@@ -21,98 +21,90 @@ public class CartController {
 
     private final CartService cartService;
 
-    // Lấy hoặc tạo cart và đưa vào model trước mỗi request tới controller này
     @ModelAttribute("shoppingCart")
     public CartDTO getShoppingCart(HttpSession session) {
         return cartService.getCart(session);
     }
 
-    // Hiển thị trang giỏ hàng
     @GetMapping
     public String viewCart(@ModelAttribute("shoppingCart") CartDTO cart, Model model) {
-        model.addAttribute("currentPage", "cart"); // Cho active link header
-        model.addAttribute("cart", cart); // Đảm bảo cart luôn có trong model cho view
+        model.addAttribute("currentPage", "cart");
+        model.addAttribute("cart", cart);
         log.debug("Displaying cart view with {} items.", cart.getTotalItems());
-        return "cart"; // --> /templates/cart.html
+        return "cart";
     }
 
-    // === BỔ SUNG CÁC PHƯƠNG THỨC POST ===
-
-    // Xử lý thêm sản phẩm vào giỏ
     @PostMapping("/add")
     public String addToCart(@RequestParam("productId") Long productId,
                             @RequestParam(value = "quantity", defaultValue = "1") int quantity,
-                           // @ModelAttribute("shoppingCart") CartDTO cart, // Không cần inject cart ở đây nữa vì service sẽ lấy từ session
-                           @RequestParam(value = "selectedSize", required = false) String selectedSize,
-                            HttpSession session, // Truyền session vào service
-                            HttpServletRequest request, // Để lấy referer URL
+                            @RequestParam(value = "selectedSize", required = false) String selectedSize,
+                            HttpSession session,
+                            HttpServletRequest request,
                             RedirectAttributes redirectAttributes) {
         log.info("Received request to add product ID: {} with quantity: {}, selectedSize: {}", productId, quantity, selectedSize);
         try {
             cartService.addToCart(productId, quantity, selectedSize, session);
-        redirectAttributes.addFlashAttribute("cartMessageSuccess", "Đã thêm sản phẩm vào giỏ hàng!");
+            redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product added to cart!");
             log.info("Successfully added product ID: {} to cart.", productId);
         } catch (ProductNotFoundException | IllegalArgumentException e) {
             log.warn("Error adding product {} to cart: {}", productId, e.getMessage());
             redirectAttributes.addFlashAttribute("cartMessageError", e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error adding product {} to cart.", productId, e);
-            redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi không mong muốn khi thêm vào giỏ hàng.");
+            redirectAttributes.addFlashAttribute("cartMessageError", "Unexpected error when adding to cart.");
         }
-
-        // Quay lại trang trước đó
         String referer = request.getHeader("Referer");
         log.debug("Redirecting back to referrer: {}", referer);
-        // Tránh redirect về login nếu trang trước đó là login (gây vòng lặp)
         return "redirect:" + (referer != null && !referer.contains("/login") && !referer.contains("/register") ? referer : "/products");
     }
 
-    // Xử lý cập nhật số lượng sản phẩm
+    // Handle product quantity update
     @PostMapping("/update")
     public String updateCartItem(@RequestParam("productId") Long productId,
                                  @RequestParam("quantity") int quantity,
+                                 @RequestParam(value = "selectedSize", required = false) String selectedSize, // <<< NEW PARAMETER
                                  HttpSession session,
                                  RedirectAttributes redirectAttributes) {
-         log.info("Received request to update product ID: {} quantity to: {}.", productId, quantity);
+         log.info("Received request to update product ID: {} with selectedSize: {} to quantity: {}.", productId, selectedSize, quantity);
          try {
-             cartService.updateQuantity(productId, quantity, session);
-             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Đã cập nhật số lượng sản phẩm.");
+             // Pass selectedSize to the service method
+             cartService.updateQuantity(productId, quantity, selectedSize, session); // <<< CHANGED CALL
+             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product quantity updated.");
          } catch (Exception e) {
-             log.error("Error updating cart for product {}", productId, e);
-             redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi khi cập nhật giỏ hàng.");
+             log.error("Error updating cart for product {} (size: {}): {}", productId, selectedSize, e.getMessage(), e);
+             redirectAttributes.addFlashAttribute("cartMessageError", "Error updating cart.");
          }
-        return "redirect:/cart"; // Luôn redirect về trang giỏ hàng sau khi cập nhật
+        return "redirect:/cart";
     }
 
-    // Xử lý xóa sản phẩm khỏi giỏ hàng
-    @PostMapping("/remove/{productId}") // Dùng PathVariable để lấy ID từ URL
-    public String removeCartItem(@PathVariable("productId") Long productId,
+    // Handle product removal from cart
+    // For consistency, removeItem should also be modified similarly if you want to remove a specific size variant
+    @PostMapping("/remove") // Should change from @PathVariable if you use selectedSize
+    public String removeCartItem(@RequestParam("productId") Long productId,
+                                 @RequestParam(value = "selectedSize", required = false) String selectedSize, // <<< NEW PARAMETER
                                  HttpSession session,
                                  RedirectAttributes redirectAttributes) {
-         log.info("Received request to remove product ID: {} from cart.", productId);
+         log.info("Received request to remove product ID: {} with selectedSize: {} from cart.", productId, selectedSize);
          try {
-             cartService.removeItem(productId, session);
-             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Đã xóa sản phẩm khỏi giỏ hàng.");
+             cartService.removeItem(productId, selectedSize, session); // <<< CHANGED CALL
+             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product removed from cart.");
          } catch (Exception e) {
-              log.error("Error removing product {} from cart.", productId, e);
-             redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi khi xóa sản phẩm.");
+              log.error("Error removing product {} (size: {}) from cart.", productId, selectedSize, e);
+             redirectAttributes.addFlashAttribute("cartMessageError", "Error removing product.");
          }
-        return "redirect:/cart"; // Luôn redirect về trang giỏ hàng sau khi xóa
+        return "redirect:/cart";
     }
 
-    // Xử lý xóa toàn bộ giỏ hàng
     @PostMapping("/clear")
-    public String clearCart(HttpSession session, RedirectAttributes redirectAttributes, SessionStatus status) { // Thêm SessionStatus
+    public String clearCart(HttpSession session, RedirectAttributes redirectAttributes, SessionStatus status) {
         log.info("Received request to clear cart using SessionStatus.");
         try {
-             // Thay vì gọi cartService.clearCart(session);
-             status.setComplete(); // Đánh dấu session attribute được quản lý bởi @SessionAttributes là hoàn thành -> sẽ bị xóa khỏi session khi redirect
-             //session.removeAttribute(CART_SESSION_KEY); // Vẫn nên giữ lại để xóa trực tiếp phòng trường hợp @SessionAttributes không hoạt động như mong đợi
-             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Giỏ hàng đã được xóa.");
-             log.info("Cart marked as complete via SessionStatus and removed attribute directly.");
+             status.setComplete();
+             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Cart has been cleared.");
+             log.info("Cart marked as complete via SessionStatus and attribute removed directly.");
         } catch (Exception e) {
              log.error("Error clearing cart.", e);
-             redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi khi xóa giỏ hàng.");
+             redirectAttributes.addFlashAttribute("cartMessageError", "Error clearing cart.");
         }
         return "redirect:/cart";
     }

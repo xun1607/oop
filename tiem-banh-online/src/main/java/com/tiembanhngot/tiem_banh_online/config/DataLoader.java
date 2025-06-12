@@ -47,7 +47,7 @@ public class DataLoader implements CommandLineRunner {
             newProduct.setImageUrl(imageUrl); // URL ảnh mẫu (vd: /img/...)
             newProduct.setCategory(category);
             newProduct.setIsAvailable(true);
-
+            newProduct.setCategory(category);
             // Set size options nếu được cung cấp và không rỗng
             if (sizeOptions != null && !sizeOptions.isEmpty()) {
                 newProduct.setSizeOptions(new HashMap<>(sizeOptions)); // Tạo bản sao để an toàn
@@ -202,7 +202,10 @@ public class DataLoader implements CommandLineRunner {
              newCategory.setName(name);
              newCategory.setDescription(description);
              log.info("Creating category: {}", name);
-             return categoryRepository.save(newCategory);
+             Category saved = categoryRepository.save(newCategory);
+            categoryRepository.flush();
+            log.info("Created category with ID = {}", saved.getCategoryId());
+             return saved;
          }
          return catOpt.get();
     }
