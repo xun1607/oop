@@ -19,6 +19,11 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+    <groupId>com.google.auth</groupId>
+    <artifactId>google-auth-library-oauth2-http</artifactId>
+    <version>1.22.0</version> <!-- hoặc phiên bản mới hơn nếu cần -->
+</dependency>
 		<!-- Spring Boot Starters -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

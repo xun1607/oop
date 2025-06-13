@@ -156,11 +156,7 @@
                                     <li class="list-group-item d-flex justify-content-between fw-bold fs-5 px-0 py-2 bg-light mt-2">
                                     <span>Tổng cộng</span>
                                     <span class="text-danger"
-                                        th:if="${finalAmount != null}"
-                                        th:text="${finalAmount} + ' ₫ (Raw)'"> <!-- Chỉ hiển thị giá trị thô -->
-                                    </span>
-                                    <span class="text-danger" th:if="${finalAmount == null}">
-                                    Lỗi tính tiền
+                                        th:text="${#numbers.formatDecimal(cart.totalAmount+25000, 0, 'COMMA', 0, 'POINT')}  + ' ₫'"> <!-- Chỉ hiển thị giá trị thô -->
                                     </span>
                                 </li>
 

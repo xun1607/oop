@@ -1,13 +1,8 @@
 package com.tiembanhngot.tiem_banh_online.service;
 
-import com.tiembanhngot.tiem_banh_online.dto.CartDTO;
-import com.tiembanhngot.tiem_banh_online.dto.OrderDTO;
-import com.tiembanhngot.tiem_banh_online.entity.*;
-import com.tiembanhngot.tiem_banh_online.exception.OrderNotFoundException;
-import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
-import com.tiembanhngot.tiem_banh_online.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,17 +10,28 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.messaging.simp.SimpMessagingTemplate; // Import cho WebSocket
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.util.Optional;
-import java.util.UUID;
+import com.tiembanhngot.tiem_banh_online.dto.CartDTO;
+import com.tiembanhngot.tiem_banh_online.dto.OrderDTO;
+import com.tiembanhngot.tiem_banh_online.entity.Order;
+import com.tiembanhngot.tiem_banh_online.entity.OrderItem;
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.entity.User;
+import com.tiembanhngot.tiem_banh_online.exception.OrderNotFoundException;
+import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
+import com.tiembanhngot.tiem_banh_online.repository.OrderRepository;
+import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-@lombok.Data @lombok.AllArgsConstructor @lombok.NoArgsConstructor
+@lombok.Data 
+@lombok.AllArgsConstructor 
+@lombok.NoArgsConstructor
 class NewOrderNotificationDTO {
     private Long orderId;
     private String orderCode;
@@ -37,18 +43,18 @@ class NewOrderNotificationDTO {
 @RequiredArgsConstructor
 @Slf4j
 public class OrderService {
+
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private SimpMessagingTemplate messagingTemplate; // dung de gui message den nguoi dung / admin
+    private SimpMessagingTemplate messagingTemplate; 
 
-
-    @Transactional 
+    @Transactional
     public Order placeOrder(OrderDTO orderDto, CartDTO cart, User currentUser) {
         if (cart == null || cart.getItemList().isEmpty()) {
-            throw new IllegalStateException("Giỏ hàng trống, không thể đặt hàng.");
+            throw new IllegalStateException("The cart is empty, unable to place an order.");
         }
 
         Order order = new Order();
@@ -56,18 +62,19 @@ public class OrderService {
         order.setRecipientPhone(orderDto.getRecipientPhone());
         order.setShippingAddress(orderDto.getShippingAddress());
         order.setNotes(orderDto.getNotes());
-        order.setUser(currentUser); 
+        order.setUser(currentUser);     
         order.setOrderCode("HD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         for (var cartItem : cart.getItemList()) {
             OrderItem orderItem = new OrderItem();
             Product product = productRepository.findById(cartItem.getProductId())
-                    .orElseThrow(() -> new ProductNotFoundException("Sản phẩm ID " + cartItem.getProductId() + " không tồn tại khi đặt hàng."));
-             if (!product.getIsAvailable()){
-                 throw new IllegalArgumentException("Sản phẩm '" + product.getName() + "' hiện không có sẵn.");
-             }
+                    .orElseThrow(() -> new ProductNotFoundException("Product ID " + cartItem.getProductId() + " is empty."));
+            if (!product.getIsAvailable()){
+                throw new IllegalArgumentException("Product '" + product.getName() + "' currently unavailable.");
+            }
             orderItem.setProduct(product);
             orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setSizeAtPurchase(cartItem.getSelectedSize());
             order.addOrderItem(orderItem);
@@ -77,22 +84,20 @@ public class OrderService {
         }
 
         order.setTotalAmount(cart.getTotalAmount());
-        order.setShippingFee(calculateShippingFee(orderDto));
+        order.setShippingFee(calculateShippingFee(orderDto)); 
         order.setFinalAmount(order.getTotalAmount().add(order.getShippingFee()));
-        order.setStatus("PENDING");
-        order.setPaymentMethod(orderDto.getPaymentMethod());
+        order.setStatus("PENDING"); 
         order.setPaymentStatus("UNPAID");
         
-
         Order savedOrder = orderRepository.save(order);
         log.info("Order placed successfully with code: {}", savedOrder.getOrderCode());
 
-        // **Gửi thông báo WebSocket cho Admin**
+        // Gửi thông báo WebSocket cho Admin
         try {
             NewOrderNotificationDTO notification = new NewOrderNotificationDTO(
                 savedOrder.getOrderId(),
                 savedOrder.getOrderCode(),
-                currentUser != null ? currentUser.getFullName() : orderDto.getRecipientName(), // Ưu tiên tên user nếu có
+                currentUser != null ? currentUser.getFullName() : orderDto.getRecipientName(), 
                 savedOrder.getFinalAmount()
             );
             messagingTemplate.convertAndSend("/topic/admin/new-orders", notification);
@@ -104,14 +109,14 @@ public class OrderService {
         return savedOrder;
     }
 
-     private BigDecimal calculateShippingFee(OrderDTO orderDto) {
-         return new BigDecimal("25000"); // Phí ship cố định ví dụ
-     }
+    private BigDecimal calculateShippingFee(OrderDTO orderDto) {
+        return new BigDecimal("25000");
+    }
 
-    // --- Các phương thức cho Admin ---
+    // Các phương thức cho Admin 
+    // phan trang
     @Transactional(readOnly = true)
     public Page<Order> findAllOrdersPaginated(Pageable pageable) {
-        log.debug("Admin: Fetching all orders with pagination: {}", pageable);
         if (pageable.getSort().isUnsorted()) {
              pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         }
@@ -125,7 +130,7 @@ public class OrderService {
              if (StringUtils.hasText(status)) {
                  return cb.equal(root.get("status"), status);
              }
-             return cb.conjunction(); // Trả về điều kiện luôn đúng nếu không có status filter
+             return cb.conjunction(); 
          };
          if (pageable.getSort().isUnsorted()) {
              pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -136,77 +141,69 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Optional<Order> findOrderDetailsById(Long id) {  //tim thong tin order bang id
         log.debug("Admin: Fetching order details for ID: {}", id);
-        Optional<Order> orderOpt = orderRepository.findById(id);
+         Optional<Order> orderOpt = orderRepository.findById(id);
+         orderOpt.ifPresent(order -> {
+         });
         return orderOpt;
     }
-
+    
     @Transactional
-    public Order updateOrderStatus(Long orderId, String newStatus) { // cap nhat thong tin order
+    public Order updateOrderStatus(Long orderId, String newStatus) {
+        log.info("Admin: Updating order ID {} to status {}", orderId, newStatus);
+
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException("Order with ID " + orderId + " not found."));
 
         if (!isValidStatusTransition(order.getStatus(), newStatus)) {
-             throw new IllegalArgumentException("Không thể cập nhật trạng thái từ '" + order.getStatus() + "' sang '" + newStatus + "'.");
+            throw new IllegalArgumentException("Cannot change status from '" + order.getStatus() + "' to '" + newStatus + "'.");
         }
 
-        log.info("Updating order status from {} to {}", order.getStatus(), newStatus);
         order.setStatus(newStatus);
 
-        
-        if ("DELIVERED".equalsIgnoreCase(newStatus) && !"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
-            if ("COD".equalsIgnoreCase(order.getPaymentMethod())) {
-                 order.setPaymentStatus("PAID");
-                 log.info("Order ID: {} payment status automatically updated to PAID for COD.", orderId);
-            } else {
-                 log.warn("Order ID: {} delivered but payment status is not PAID and method is not COD.", orderId);
-                 // Có thể cần hành động khác ở đây
-            }
-        } else if ("CANCELLED".equalsIgnoreCase(newStatus) && !"REFUNDED".equalsIgnoreCase(order.getPaymentStatus())) {
-            if ("PAID".equalsIgnoreCase(order.getPaymentStatus())) {
-                 order.setPaymentStatus("REFUNDED"); // Giả sử hoàn tiền khi hủy đơn đã thanh toán
-                 log.info("Order ID: {} payment status updated to REFUNDED due to cancellation.", orderId);
-            } else {
-                 // Nếu chưa thanh toán, có thể giữ nguyên UNPAID hoặc đặt là CANCELLED/VOID
-                 log.info("Order ID: {} cancelled while payment status was {}.", orderId, order.getPaymentStatus());
-            }
-            // TODO: Thêm logic hoàn trả số lượng sản phẩm vào kho (nếu cần)
+        switch (newStatus.toUpperCase()) {
+            case "DELIVERED":
+                if ("COD".equalsIgnoreCase(order.getPaymentMethod())) {
+                    order.setPaymentStatus("PAID");
+                    log.info("Order ID {}: payment status set to PAID (COD).", orderId);
+                }
+                break;
+
+            case "CANCELLED":
+                if ("PAID".equalsIgnoreCase(order.getPaymentStatus())) {
+                    order.setPaymentStatus("REFUNDED");
+                    log.info("Order ID {}: payment status set to REFUNDED due to cancellation.", orderId);
+                } else {
+                    log.info("Order ID {} cancelled with payment status {}.", orderId, order.getPaymentStatus());
+                }
+                break;
         }
 
-        Order updatedOrder = orderRepository.save(order);
-        log.info("Order ID: {} status successfully updated to {}. Payment status: {}", orderId, updatedOrder.getStatus(), updatedOrder.getPaymentStatus());
-        return updatedOrder;
+        Order updated = orderRepository.save(order);
+        log.info("Order ID {} updated to status {}. Payment status: {}", orderId, updated.getStatus(), updated.getPaymentStatus());
+        return updated;
     }
 
-    // Kiểm tra chuyển trạng thái
+    // Check transition
     private boolean isValidStatusTransition(String currentStatus, String newStatus) {
         if (!StringUtils.hasText(currentStatus) || !StringUtils.hasText(newStatus)) return false;
-        if (currentStatus.equalsIgnoreCase(newStatus)) return false; // Không cho cập nhật trạng thái giống hệt
+        if (currentStatus.equalsIgnoreCase(newStatus)) return false; 
 
-        // Quy tắc cơ bản: không đổi trạng thái sau khi DELIVERED hoặc CANCELLED
+        // không đổi trạng thái sau khi DELIVERED hoặc CANCELLED
         if ("CANCELLED".equalsIgnoreCase(currentStatus) || "DELIVERED".equalsIgnoreCase(currentStatus)) {
             log.warn("Attempted invalid status transition from {} to {}", currentStatus, newStatus);
-             return false;
+            return false;
         }
-        // Thêm các quy tắc khác nếu cần, ví dụ:
-        // if ("PENDING".equalsIgnoreCase(currentStatus) && "SHIPPED".equalsIgnoreCase(newStatus)) return false; // Phải qua PROCESSING trước
-
         return true;
     }
 
-    // --- Các phương thức cho User ---
+    // Các phương thức cho User 
     @Transactional(readOnly = true)
     public Page<Order> findOrdersByUserPaginated(User user, Pageable pageable) {
         log.debug("Fetching orders for user ID: {} with pagination: {}", user.getUserId(), pageable);
-        if (pageable.getSort().isUnsorted()) {
-             pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        }
         return orderRepository.findByUser(user, pageable); // Đảm bảo method này có trong OrderRepository
     }
-    @lombok.Data @lombok.AllArgsConstructor @lombok.NoArgsConstructor
-    class NewOrderNotificationDTO {
-        private Long orderId;
-        private String orderCode;
-        private String customerName;
-        private BigDecimal totalAmount;
+    
+    public long countTotalProducts() {
+        return productRepository.count();
     }
 }
