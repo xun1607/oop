@@ -47,7 +47,7 @@ public class OrderItem {
     private BigDecimal priceAtPurchase; 
 
 
-@Column(name = "size_at_purchase", length = 100) // Tăng độ dài nếu cần
+@Column(name = "size_at_purchase", length = 100)
 private String sizeAtPurchase;
     @Override
     public boolean equals(Object o) {

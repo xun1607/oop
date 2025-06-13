@@ -64,21 +64,19 @@ public class CartService {
         }
 
         CartDTO cart = getCart(session); 
-
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
-
-     
+        //tim sp 
+        Product product = productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+        // lay sp
         if (!Boolean.TRUE.equals(product.getIsAvailable())) {
              log.warn("Attempted to add unavailable product ID: {} ('{}') to cart.", productId, product.getName());
              throw new IllegalArgumentException("Sản phẩm '" + product.getName() + "' hiện không có sẵn.");
         }
-   
+        // lay gia sp
          if (product.getPrice() == null) {
               log.error("Product ID: {} ('{}') has a NULL price. Cannot add to cart.", productId, product.getName());
               throw new IllegalStateException("Sản phẩm '" + product.getName() + "' đang gặp lỗi về giá. Vui lòng liên hệ hỗ trợ.");
          }
-   
+        // tinh tong gia sp (bao gom chon size, so luong)
         BigDecimal priceToUse = product.getPrice(); 
         String sizeIdentifier = selectedSize; 
 
@@ -134,8 +132,6 @@ public class CartService {
 
     }
 
-    
-    
     public void updateQuantity(Long productId, int quantity, HttpSession session) {
         CartDTO cart = getCart(session);
         CartItemDTO item = cart.getItems().get(productId);
