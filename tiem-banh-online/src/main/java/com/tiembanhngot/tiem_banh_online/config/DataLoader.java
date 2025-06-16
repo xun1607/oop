@@ -47,7 +47,7 @@ public class DataLoader implements CommandLineRunner {
             newProduct.setImageUrl(imageUrl); // URL ảnh mẫu (vd: /img/...)
             newProduct.setCategory(category);
             newProduct.setIsAvailable(true);
-
+            newProduct.setCategory(category);
             // Set size options nếu được cung cấp và không rỗng
             if (sizeOptions != null && !sizeOptions.isEmpty()) {
                 newProduct.setSizeOptions(new HashMap<>(sizeOptions)); // Tạo bản sao để an toàn
@@ -76,10 +76,10 @@ public class DataLoader implements CommandLineRunner {
         // createUserIfNotFound("customer@email.com", "Customer Name", "Cust123", "0911111111", customerRole);
 
         // 3. Tạo Categories
-        Category banhKem = createCategoryIfNotFound("Bánh Kem", "Các loại bánh kem sinh nhật, lễ kỷ niệm", "banh-kem");
-        Category pastry = createCategoryIfNotFound("Pastry", "Bánh ngọt kiểu Âu", "pastry");
-        Category banhMi = createCategoryIfNotFound("Bánh Mì Ngọt", "Các loại bánh mì ăn sáng, ăn nhẹ", "banh-mi-ngot");
-        Category cookies = createCategoryIfNotFound("Cookies", "Bánh quy các loại", "cookies");
+        Category banhKem = createCategoryIfNotFound("Bánh Kem", "Các loại bánh kem sinh nhật, lễ kỷ niệm");
+        Category pastry = createCategoryIfNotFound("Pastry", "Bánh ngọt kiểu Âu");
+        Category banhMi = createCategoryIfNotFound("Bánh Mì Ngọt", "Các loại bánh mì ăn sáng, ăn nhẹ");
+        Category cookies = createCategoryIfNotFound("Cookies", "Bánh quy các loại");
 
         // --- 4. Tạo Products ---
         // Đảm bảo đường dẫn ảnh trỏ đến file có thật trong /static/img/...
@@ -195,14 +195,17 @@ public class DataLoader implements CommandLineRunner {
          return prodOpt.get();
      }
     @Transactional
-    Category createCategoryIfNotFound(String name, String description, String slug) {
-         Optional<Category> catOpt = categoryRepository.findBySlug(slug);
+    Category createCategoryIfNotFound(String name, String description) {
+         Optional<Category> catOpt = categoryRepository.findByName(name);
          if (catOpt.isEmpty()) {
              Category newCategory = new Category();
              newCategory.setName(name);
              newCategory.setDescription(description);
              log.info("Creating category: {}", name);
-             return categoryRepository.save(newCategory);
+             Category saved = categoryRepository.save(newCategory);
+            categoryRepository.flush();
+            log.info("Created category with ID = {}", saved.getCategoryId());
+             return saved;
          }
          return catOpt.get();
     }

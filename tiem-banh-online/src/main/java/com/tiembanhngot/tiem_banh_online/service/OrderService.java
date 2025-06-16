@@ -1,13 +1,8 @@
 package com.tiembanhngot.tiem_banh_online.service;
 
-import com.tiembanhngot.tiem_banh_online.dto.CartDTO;
-import com.tiembanhngot.tiem_banh_online.dto.OrderDTO;
-import com.tiembanhngot.tiem_banh_online.entity.*;
-import com.tiembanhngot.tiem_banh_online.exception.OrderNotFoundException;
-import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
-import com.tiembanhngot.tiem_banh_online.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,14 +10,24 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.messaging.simp.SimpMessagingTemplate; 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.util.Optional;
-import java.util.UUID;
+import com.tiembanhngot.tiem_banh_online.dto.CartDTO;
+import com.tiembanhngot.tiem_banh_online.dto.OrderDTO;
+import com.tiembanhngot.tiem_banh_online.entity.Order;
+import com.tiembanhngot.tiem_banh_online.entity.OrderItem;
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.entity.User;
+import com.tiembanhngot.tiem_banh_online.exception.OrderNotFoundException;
+import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
+import com.tiembanhngot.tiem_banh_online.repository.OrderRepository;
+import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @lombok.Data 
 @lombok.AllArgsConstructor 
@@ -69,6 +74,7 @@ public class OrderService {
             }
             orderItem.setProduct(product);
             orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setSizeAtPurchase(cartItem.getSelectedSize());
             order.addOrderItem(orderItem);
@@ -133,7 +139,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Order> findOrderDetailsById(Long id) {
+    public Optional<Order> findOrderDetailsById(Long id) {  //tim thong tin order bang id
         log.debug("Admin: Fetching order details for ID: {}", id);
          Optional<Order> orderOpt = orderRepository.findById(id);
          orderOpt.ifPresent(order -> {
