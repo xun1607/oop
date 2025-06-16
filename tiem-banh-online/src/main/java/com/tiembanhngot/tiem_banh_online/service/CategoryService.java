@@ -55,7 +55,6 @@ public class CategoryService {
 
         try {
             Category savedCategory = categoryRepository.save(category);
-            log.info("Category {} successfully with ID: {}", isNew ? "created" : "updated", savedCategory.getCategoryId());
             return savedCategory;
         } catch (DataIntegrityViolationException e) {
         log.error("Data integrity violation while saving category '{}': {}", category.getName(), e.getMessage());
@@ -74,16 +73,15 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException("Không tìm thấy danh mục với ID: " + id));
 
-        if (productRepository.existsByCategoryCategoryId(id)) { 
+        if (productRepository.existsByCategoryCategoryId(id)) {
             throw new DataIntegrityViolationException("Không thể xóa danh mục ID: " + id + " vì vẫn còn sản phẩm thuộc danh mục này.");
         }
 
         try {
-             categoryRepository.delete(category);
-             log.info("Successfully deleted category ID: {}", id);
-        } catch (DataIntegrityViolationException e) { 
+            categoryRepository.delete(category);
+        } catch (DataIntegrityViolationException e) {
             log.error("Cannot delete category ID: {} due to data integrity violation.", id, e);
-             throw new DataIntegrityViolationException("Không thể xóa danh mục ID: " + id + " do ràng buộc dữ liệu.");
+            throw new DataIntegrityViolationException("Không thể xóa danh mục ID: " + id + " do ràng buộc dữ liệu.");
         }
     }
 }
