@@ -1,11 +1,6 @@
 package com.tiembanhngot.tiem_banh_online.controller.admin;
 
-import com.tiembanhngot.tiem_banh_online.entity.Product;
-import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
-import com.tiembanhngot.tiem_banh_online.service.CategoryService;
-import com.tiembanhngot.tiem_banh_online.service.ProductService;
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,10 +12,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.io.IOException;
+
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
+import com.tiembanhngot.tiem_banh_online.service.CategoryService;
+import com.tiembanhngot.tiem_banh_online.service.ProductService;
+
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -136,38 +143,9 @@ public class AdminProductController {
                     (isNew ? "Đã thêm" : "Đã cập nhật") + " sản phẩm '" + product.getName() + "' thành công!");
             return "redirect:/admin/products";
 
-<<<<<<< HEAD
-        } catch (DataIntegrityViolationException e) { // Lỗi ràng buộc dữ liệu (ví dụ: slug trùng)
-            log.error("Data integrity violation while saving product '{}': {}", product.getName(), e.getMessage());
-            // Cố gắng xác định lỗi và thêm vào BindingResult
-            // Lưu ý: Tên constraint ('products_slug_key', 'products_name_key') cần khớp với tên trong DB của bạn
-            if (e.getMessage() != null) {
-                String lowerCaseMsg = e.getMessage().toLowerCase();
-                if (lowerCaseMsg.contains("slug") || lowerCaseMsg.contains("products_slug_key")) { // Kiểm tra cả text và tên constraint (ví dụ)
-                     bindingResult.rejectValue("slug", "duplicate.slug", "Slug '" + product.getSlug() + "' đã tồn tại. Vui lòng sửa tên sản phẩm hoặc slug.");
-                } else if (lowerCaseMsg.contains("name") || lowerCaseMsg.contains("products_name_key")) { // Ví dụ nếu có unique constraint cho name
-                     bindingResult.rejectValue("name", "duplicate.name", "Tên sản phẩm '" + product.getName() + "' đã tồn tại.");
-                } else {
-                     // Lỗi ràng buộc khác không xác định
-                     model.addAttribute("errorMessage", "Lỗi lưu sản phẩm do ràng buộc dữ liệu: " + e.getMessage());
-                }
-            } else {
-                 model.addAttribute("errorMessage", "Lỗi lưu sản phẩm do ràng buộc dữ liệu không xác định.");
-            }
-
-            loadCategories(model); // Load lại categories
-            // Giữ lại URL ảnh đã xử lý (có thể là mới hoặc cũ) để hiển thị lại form
-            product.setImageUrl(finalImageUrlToSave); // Đảm bảo model có URL đúng
-            return "admin/product/form"; // Quay lại form với lỗi
-
-        } catch (Exception e) { // Bắt các lỗi không mong muốn khác khi lưu DB
-            log.error("Admin: Unexpected error saving product '{}': {}", product.getName(), e.getMessage(), e); // Log cả stack trace
-            model.addAttribute("errorMessage", "Lỗi không mong muốn khi lưu sản phẩm: " + e.getMessage());
-=======
         } catch (IOException e) {
             log.error("Admin: Lỗi lưu ảnh: {}", e.getMessage());
             model.addAttribute("errorMessage", "Lỗi lưu ảnh sản phẩm.");
->>>>>>> origin/nnd
             loadCategories(model);
             return "admin/product/form";
 

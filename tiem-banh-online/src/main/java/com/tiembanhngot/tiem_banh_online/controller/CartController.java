@@ -17,12 +17,10 @@ import com.tiembanhngot.tiem_banh_online.service.CartService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/cart") 
-@RequiredArgsConstructor
 @SessionAttributes("shoppingCart") 
 @Slf4j
 public class CartController {
@@ -38,15 +36,13 @@ public class CartController {
     public String viewCart(@ModelAttribute("shoppingCart") CartDTO cart, Model model) {
         model.addAttribute("currentPage", "cart");
         model.addAttribute("cart", cart);
-        log.debug("Displaying cart view with {} items.", cart.getTotalItems());
         return "cart";
     }
 
     @PostMapping("/add")
     public String addToCart(@RequestParam("productId") Long productId, @RequestParam(value = "quantity", defaultValue = "1") int quantity,
-                           @RequestParam(value = "selectedSize", required = false) String selectedSize, HttpSession session, 
-                            HttpServletRequest request,  RedirectAttributes redirectAttributes) {
-        log.info("Received request to add product ID: {} with quantity: {}, selectedSize: {}", productId, quantity, selectedSize);
+                        @RequestParam(value = "selectedSize", required = false) String selectedSize, HttpSession session,
+                        HttpServletRequest request,  RedirectAttributes redirectAttributes) {
         try {
             cartService.addToCart(productId, quantity, selectedSize, session);
             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Đã thêm sản phẩm vào giỏ hàng!");
@@ -66,26 +62,26 @@ public class CartController {
     @PostMapping("/update")
     public String updateCartItem(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity, String selectedSize, 
                                 HttpSession session, RedirectAttributes redirectAttributes) {
-         try {
-             // Pass selectedSize to the service method
-             cartService.updateQuantity(productId, quantity, selectedSize, session); // <<< CHANGED CALL
-             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product quantity updated.");
-         } catch (Exception e) {
-             log.error("Error updating cart for product {} (size: {}): {}", productId, selectedSize, e.getMessage(), e);
-             redirectAttributes.addFlashAttribute("cartMessageError", "Error updating cart.");
-         }
+        try {
+            
+            cartService.updateQuantity(productId, quantity, selectedSize, session); // <<< CHANGED CALL
+            redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product quantity updated.");
+        } catch (Exception e) {
+            log.error("Error updating cart for product {} (size: {}): {}", productId, selectedSize, e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("cartMessageError", "Error updating cart.");
+        }
         return "redirect:/cart";
     }
 
     @PostMapping("/remove/{productId}") 
     public String removeCartItem(@PathVariable("productId") Long productId, HttpSession session, RedirectAttributes redirectAttributes) {
-         try {
-             cartService.removeItemById(productId, session); 
-             redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product removed from cart.");
-         } catch (Exception e) {
-             log.error("Error removing product {} from cart.", productId, e);
-             redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi khi xóa sản phẩm.");
-         }
+        try {
+            cartService.removeItemById(productId, session);
+            redirectAttributes.addFlashAttribute("cartMessageSuccess", "Product removed from cart.");
+        } catch (Exception e) {
+            log.error("Error removing product {} from cart.", productId, e);
+            redirectAttributes.addFlashAttribute("cartMessageError", "Lỗi khi xóa sản phẩm.");
+        }
         return "redirect:/cart";
     }
 

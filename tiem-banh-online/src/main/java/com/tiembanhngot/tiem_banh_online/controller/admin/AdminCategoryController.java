@@ -42,7 +42,7 @@ public class AdminCategoryController {
             Model model) {
 
 
-        String[] sortParams = sort.split(","); 
+        String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 ? Sort.Direction.fromString(sortParams[1]) : Sort.Direction.ASC;
         String sortField = sortParams[0];
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField)); //hien thi danh sach tren nhieu trang -> ko qua tai du lieu
@@ -111,7 +111,6 @@ public class AdminCategoryController {
             return "redirect:/admin/categories";
         } catch (DataIntegrityViolationException e) { // Bắt lỗi trùng tên
             log.error("Data integrity violation while saving category {}: {}", category.getName(), e.getMessage());
-            
             if(e.getMessage() != null && e.getMessage().toLowerCase().contains("name")) {
                 bindingResult.rejectValue("name", "duplicate.name", e.getMessage());
             } else {
@@ -134,13 +133,10 @@ public class AdminCategoryController {
             redirectAttributes.addFlashAttribute("successMessage", "Đã xóa danh mục ID: " + id);
     
         } catch (CategoryNotFoundException e) {
-            log.warn("Attempted to delete non-existent category: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (DataIntegrityViolationException e) { // Bắt lỗi ràng buộc khóa ngoại
-            log.error("Cannot delete category ID: {} due to existing references (e.g., products).", id, e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage()); // Hiển thị lỗi từ service
         } catch (Exception e) {
-            log.error("Error deleting category ID: {}", id, e);
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi không mong muốn khi xóa danh mục ID: " + id);
         }
         return "redirect:/admin/categories";
