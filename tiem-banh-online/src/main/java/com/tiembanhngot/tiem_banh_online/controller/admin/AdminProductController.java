@@ -1,12 +1,10 @@
 package com.tiembanhngot.tiem_banh_online.controller.admin;
 
-import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
 import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.service.CategoryService;
 import com.tiembanhngot.tiem_banh_online.service.ProductService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;

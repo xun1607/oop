@@ -44,8 +44,8 @@
                     <li class="breadcrumb-item"><a th:href="@{/products}">Sản Phẩm</a></li>
                     <!-- Link danh mục nếu có -->
                     <li class="breadcrumb-item" th:if="${product.category}">
-                        <a th:href="@{/products(category=${product.category.slug})}" <!-- Hoặc link category riêng -->
-                        <!   th:text="${product.category.name}">Category</a>
+                        <a th:href="@{/products(category=${product.category.name})}" 
+                           th:text="${product.category.name}">Category</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">Product Name</li>
                   </ol>
@@ -63,7 +63,7 @@
                         <h1 th:text="${product.name}">Product Name</h1>
                         <!-- Link danh mục -->
                         <p class="mb-2" th:if="${product.category}">
-                            <a th:href="@{/products(category=${product.category.slug})}"
+                            <a th:href="@{/products(category=${product.category.name})}"
                                class="text-muted text-decoration-none category-link"
                                th:text="${product.category.name}">Category Name</a>
                         </p>
