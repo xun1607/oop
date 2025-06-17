@@ -1,23 +1,37 @@
+
 package com.tiembanhngot.tiem_banh_online.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Objects; 
 import java.util.HashMap;
-import java.util.Map; 
+import java.util.Map;
+import java.util.Objects;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString; 
 
 @Entity
 @NoArgsConstructor
 @Getter
 @Setter
 @Table(name = "products", indexes = {
-        @Index(name = "idx_product_slug", columnList = "slug", unique = true),
         @Index(name = "idx_product_category_id", columnList = "category_id")
 })
 @ToString(exclude = {"category", "sizeOptions"}) 
@@ -44,14 +58,11 @@ public class Product {
     private Map<String, BigDecimal> sizeOptions = new HashMap<>(); 
    
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "category_id", nullable = false) 
+    @JoinColumn(name = "category_id") 
     private Category category;
 
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true; 
-
-    @Column(length = 270, unique = true, nullable = false) 
-    private String slug; // URL-friendly unique identifier
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
