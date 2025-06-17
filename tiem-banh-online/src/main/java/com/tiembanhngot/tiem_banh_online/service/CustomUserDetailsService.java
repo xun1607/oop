@@ -28,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         @Transactional(readOnly = true)
         public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng: " + email));
 
         Collection<? extends GrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_" + user.getRole().name()) 

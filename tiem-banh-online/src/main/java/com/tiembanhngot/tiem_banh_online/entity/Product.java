@@ -17,7 +17,6 @@ import java.util.Map;
 @Getter
 @Setter
 @Table(name = "products", indexes = {
-        @Index(name = "idx_product_slug", columnList = "slug", unique = true),
         @Index(name = "idx_product_category_id", columnList = "category_id")
 })
 @ToString(exclude = {"category", "sizeOptions"}) 
@@ -44,7 +43,7 @@ public class Product {
     private Map<String, BigDecimal> sizeOptions = new HashMap<>(); 
    
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "category_id", nullable = false) 
+    @JoinColumn(name = "category_id") 
     private Category category;
 
     @Column(name = "is_available", nullable = false)
