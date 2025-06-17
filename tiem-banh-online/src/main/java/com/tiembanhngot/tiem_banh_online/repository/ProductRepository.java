@@ -1,6 +1,7 @@
 package com.tiembanhngot.tiem_banh_online.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryAndIsAvailableTrue(Category category);
     List<Product> findByIsAvailableTrueOrderByCreatedAtDesc();
     List<Product> findByNameContainingIgnoreCaseAndIsAvailableTrue(String name);
+
+    Optional<Product> findByName(String name);
 
     boolean existsByCategoryCategoryId(Integer categoryId);
     
