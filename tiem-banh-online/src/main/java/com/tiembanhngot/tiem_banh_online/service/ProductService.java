@@ -56,6 +56,14 @@ public class ProductService {
         if (!StringUtils.hasText(product.getName())) {
             throw new IllegalArgumentException("Tên sản phẩm không được để trống.");
         }
+        String targetSlug = product.getSlug();
+        if (!StringUtils.hasText(targetSlug)) {
+            targetSlug = generateSlug(product.getName());
+            log.debug("Generated initial slug: {}", targetSlug);
+        }
+        String finalSlug = ensureUniqueSlug(targetSlug, product.getProductId());
+        product.setSlug(finalSlug);
+        log.debug("Final slug set to: {}", finalSlug);
 
         if (image != null && !image.isEmpty()) {
             String fileName = System.currentTimeMillis() + "_" + image.getOriginalFilename();
@@ -66,9 +74,7 @@ public class ProductService {
         try {
             return productRepository.save(product);
         } catch (DataIntegrityViolationException e) {
-            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-            if (msg.contains("name")) {
-                throw new DataIntegrityViolationException("Tên sản phẩm đã tồn tại.", e);
+
             }
             throw new RuntimeException("Lỗi khi lưu sản phẩm.", e);
         }
@@ -92,7 +98,6 @@ public class ProductService {
             product.setImageUrl(existing.getImageUrl());
         }
 
-        return productRepository.save(product);
     }
 
     public void deleteProductById(Long id) {

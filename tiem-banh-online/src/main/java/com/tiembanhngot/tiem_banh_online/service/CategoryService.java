@@ -14,7 +14,6 @@ import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.repository.CategoryRepository;
 import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 class CategoryNotFoundException extends RuntimeException {
@@ -23,7 +22,6 @@ class CategoryNotFoundException extends RuntimeException {
     }
 }
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class CategoryService {
     @Autowired
