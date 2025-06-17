@@ -40,6 +40,7 @@ a:hover {
     font-weight: bold;
 }
 
+
 /* --- Navbar --- */
 .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .navbar-brand { font-family: 'Pacifico', cursive; font-size: 1.6rem; color: #D2691E !important; }
@@ -80,9 +81,9 @@ a:hover {
 .hero-section .btn-warning:hover { background-color: #e68a2e; border-color: #e68a2e; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
 /* --- Product Cards --- */
-.product-card { transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out; overflow: hidden; border: 1px solid #eee !important; border-radius: 0.5rem; background-color: #fff; }
+.product-card { transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out; overflow: hidden; border: 1px solid #eee !important; border-radius: 0.5rem; background-color: #fdfcfb; }
 .product-card:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important; }
-.product-card-img-wrapper { overflow: hidden; border-radius: 0.5rem 0.5rem 0 0; }
+.product-card-img-wrapper { overflow: hidden; border-radius: 0.5rem 0.5rem 0 0; background-color: #FFFCF2}
 .product-card-img { height: 220px; width: 100%; object-fit: cover; transition: transform 0.3s ease; }
 .product-card:hover .product-card-img { transform: scale(1.05); }
 .product-card .card-body { padding: 1rem; }
