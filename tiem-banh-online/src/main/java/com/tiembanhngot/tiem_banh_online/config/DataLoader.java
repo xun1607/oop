@@ -33,9 +33,6 @@ public class DataLoader implements CommandLineRunner {
         if (prodOpt.isEmpty()) {
             Product newProduct = new Product();
             newProduct.setName(name);
-            // TODO: Nên gọi hàm tạo slug chuẩn ở đây nếu slug chưa được chuẩn hóa
-            // newProduct.setSlug(ProductService.generateSlug(slug)); // Ví dụ
-            newProduct.setSlug(slug); // Tạm thời giữ nguyên slug truyền vào
             newProduct.setDescription(description);
             newProduct.setPrice(defaultPrice); // Giá mặc định/cơ bản
             newProduct.setImageUrl(imageUrl); // URL ảnh mẫu (vd: /img/...)

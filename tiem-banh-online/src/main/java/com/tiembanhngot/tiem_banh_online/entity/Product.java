@@ -17,7 +17,6 @@ import java.util.Map;
 @Getter
 @Setter
 @Table(name = "products", indexes = {
-        @Index(name = "idx_product_slug", columnList = "slug", unique = true),
         @Index(name = "idx_product_category_id", columnList = "category_id")
 })
 @ToString(exclude = {"category", "sizeOptions"}) 
@@ -49,9 +48,6 @@ public class Product {
 
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true; 
-
-    @Column(length = 270, unique = true, nullable = false) 
-    private String slug; // URL-friendly unique identifier
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
