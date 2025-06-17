@@ -1,12 +1,6 @@
 package com.tiembanhngot.tiem_banh_online.controller.admin;
 
-import com.tiembanhngot.tiem_banh_online.entity.Category;
-import com.tiembanhngot.tiem_banh_online.service.CategoryService;
-// Import exception nếu tạo riêng
-import com.tiembanhngot.tiem_banh_online.exception.CategoryNotFoundException;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,31 +10,42 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.tiembanhngot.tiem_banh_online.entity.Category;
+import com.tiembanhngot.tiem_banh_online.exception.CategoryNotFoundException;
+import com.tiembanhngot.tiem_banh_online.service.CategoryService;
+
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/admin/categories")
-@PreAuthorize("hasRole('ADMIN')") // Chỉ Admin
-@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 public class AdminCategoryController {
+    @Autowired
+    private CategoryService categoryService;
 
-    private final CategoryService categoryService;
-
-    // Hiển thị danh sách danh mục (phân trang, sắp xếp)
+    // Hiển thị danh sách category
     @GetMapping
     public String listCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "categoryId,asc") String sort,
+            @RequestParam(defaultValue = "categoryId,asc") String sort, // sap xep theo categoryId, tang dan
             Model model) {
 
-        log.info("Request received for category list: page={}, size={}, sort={}", page, size, sort);
-        String[] sortParams = sort.split(",");
+
+        String[] sortParams = sort.split(","); 
         Sort.Direction direction = sortParams.length > 1 ? Sort.Direction.fromString(sortParams[1]) : Sort.Direction.ASC;
         String sortField = sortParams[0];
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField)); //hien thi danh sach tren nhieu trang -> ko qua tai du lieu
 
         Page<Category> categoryPage = categoryService.findAllCategoriesPaginated(pageable);
 
@@ -52,24 +57,22 @@ public class AdminCategoryController {
         model.addAttribute("pageSize", size);
         model.addAttribute("sort", sort);
 
-        model.addAttribute("currentPage", "categories"); // <-- THÊM DÒNG NÀY
-    log.debug("Returning category list view...");
+        model.addAttribute("currentPage", "categories"); 
+    
     return "admin/category/list";
     }
 
-    // Hiển thị form thêm danh mục
+    // thêm category
     @GetMapping("/add")
     public String showAddCategoryForm(Model model) {
-        log.debug("Request received for add category form.");
-        model.addAttribute("category", new Category()); // Category rỗng cho form
+        model.addAttribute("category", new Category()); 
         model.addAttribute("pageTitle", "Thêm Danh Mục Mới");
-        return "admin/category/form"; // --> /templates/admin/category/form.html
+        return "admin/category/form";
     }
 
-    // Hiển thị form sửa danh mục
+    // sửa category
     @GetMapping("/edit/{id}")
     public String showEditCategoryForm(@PathVariable("id") Integer id, Model model, RedirectAttributes redirectAttributes) {
-        log.info("Request received to edit category with ID: {}", id);
         try {
             Category category = categoryService.findById(id)
                     .orElseThrow(() -> new CategoryNotFoundException("Không tìm thấy danh mục với ID: " + id));
@@ -87,58 +90,52 @@ public class AdminCategoryController {
     // Xử lý lưu (thêm mới hoặc cập nhật) danh mục
     @PostMapping("/save")
     public String saveCategory(@Valid @ModelAttribute("category") Category category,
-                               BindingResult bindingResult,
-                               Model model, // Để trả về form nếu lỗi
-                               RedirectAttributes redirectAttributes) {
+                            BindingResult bindingResult,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
 
-        log.info("Attempting to save category: {}", category.getName() != null ? category.getName() : "New Category");
         boolean isNew = category.getCategoryId() == null;
         String pageTitle = isNew ? "Thêm Danh Mục Mới" : "Chỉnh Sửa Danh Mục (ID: " + category.getCategoryId() + ")";
-        model.addAttribute("pageTitle", pageTitle); // Set lại title phòng khi lỗi
+        model.addAttribute("pageTitle", pageTitle);
 
         // Kiểm tra lỗi validation cơ bản
         if (bindingResult.hasErrors()) {
             log.warn("Validation errors found for category {}: {}", category.getName(), bindingResult.getAllErrors());
-            return "admin/category/form"; // Trả về form nếu có lỗi
+            return "admin/category/form";
         }
 
-        // Lưu danh mục
         try {
-            log.debug("Calling categoryService.saveCategory for category: {}", category.getName());
-            categoryService.saveCategory(category);
+            categoryService.saveCategory(category); //lưu category (tạo mới hoặc sửa cũ)
             redirectAttributes.addFlashAttribute("successMessage", "Đã " + (isNew ? "thêm" : "cập nhật") + " danh mục thành công!");
             log.info("Category {} successfully.", isNew ? "created" : "updated");
             return "redirect:/admin/categories";
-        } catch (DataIntegrityViolationException e) { // Bắt lỗi trùng tên/slug
+        } catch (DataIntegrityViolationException e) { // Bắt lỗi trùng tên
             log.error("Data integrity violation while saving category {}: {}", category.getName(), e.getMessage());
-            // Phân tích lỗi để hiển thị đúng field (cần dựa vào thông báo lỗi DB hoặc constraint name)
-            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("slug")) {
-                 bindingResult.rejectValue("slug", "duplicate.slug", e.getMessage());
-            } else if (e.getMessage() != null && e.getMessage().toLowerCase().contains("name")) {
-                 bindingResult.rejectValue("name", "duplicate.name", e.getMessage());
+            
+            if(e.getMessage() != null && e.getMessage().toLowerCase().contains("name")) {
+                bindingResult.rejectValue("name", "duplicate.name", e.getMessage());
             } else {
-                 model.addAttribute("errorMessage", "Lỗi lưu danh mục: " + e.getMessage());
+                model.addAttribute("errorMessage", "Lỗi lưu danh mục: " + e.getMessage());
             }
             return "admin/category/form";
         } catch (Exception e) {
             log.error("Error saving category {}", category.getName(), e);
             model.addAttribute("errorMessage", "Lỗi không mong muốn khi lưu danh mục: " + e.getMessage());
-             model.addAttribute("category", category); // Đảm bảo category object còn trong model
-            return "admin/category/form"; // Quay lại form với thông báo lỗi
+            model.addAttribute("category", category);
+            return "admin/category/form";
         }
     }
 
-    // Xử lý xóa danh mục
+    // xóa danh mục
     @PostMapping("/delete/{id}")
     public String deleteCategory(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
-        log.info("Request received to delete category with ID: {}", id);
         try {
             categoryService.deleteCategoryById(id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã xóa danh mục ID: " + id);
-            log.info("Successfully deleted category ID: {}", id);
+    
         } catch (CategoryNotFoundException e) {
-             log.warn("Attempted to delete non-existent category: {}", e.getMessage());
-             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            log.warn("Attempted to delete non-existent category: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (DataIntegrityViolationException e) { // Bắt lỗi ràng buộc khóa ngoại
             log.error("Cannot delete category ID: {} due to existing references (e.g., products).", id, e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage()); // Hiển thị lỗi từ service

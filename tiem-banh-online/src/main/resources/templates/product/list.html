@@ -25,6 +25,7 @@
         </div>
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+
             <div th:each="product : ${products}" class="col">
                 <div class="card h-100 product-card shadow-sm border-light text-center">
                     <!-- Ảnh và link chi tiết -->
@@ -64,6 +65,7 @@
             </div>
 
             <!-- Nếu không có sản phẩm -->
+
             <div th:if="${products == null or #lists.isEmpty(products)}" class="col-12">
                 <div class="alert alert-info text-center my-5">
                     <p class="lead">Hiện chưa có sản phẩm nào.</p>

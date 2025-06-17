@@ -34,13 +34,14 @@
                         </div>
                     </div>
 
+                     <!-- Category Slug (Có thể để read-only hoặc ẩn) -->
                      <div class="mb-3 row">
-                        <label for="name" class="col-sm-3 col-form-label">Name</label>
+                        <label for="slug" class="col-sm-3 col-form-label">Slug</label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control" th:field="*{name}" id="name"
-                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" readonly> <!-- Nên để readonly -->
-                             <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-                             <small class="form-text text-muted">Name sẽ được tự động tạo từ tên nếu để trống khi thêm mới.</small>
+                            <input type="text" class="form-control" th:field="*{slug}" id="slug"
+                                   th:classappend="${#fields.hasErrors('slug')} ? 'is-invalid' : ''" readonly> <!-- Nên để readonly -->
+                             <div class="invalid-feedback" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}"></div>
+                             <small class="form-text text-muted">Slug sẽ được tự động tạo từ tên nếu để trống khi thêm mới.</small>
                         </div>
                     </div>
 
