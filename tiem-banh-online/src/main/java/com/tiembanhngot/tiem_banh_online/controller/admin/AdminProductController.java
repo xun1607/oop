@@ -290,7 +290,9 @@ public class AdminProductController {
             // Lưu ý: Tên constraint ('products_slug_key', 'products_name_key') cần khớp với tên trong DB của bạn
             if (e.getMessage() != null) {
                 String lowerCaseMsg = e.getMessage().toLowerCase();
-                if (lowerCaseMsg.contains("name") || lowerCaseMsg.contains("products_name_key")) { // Ví dụ nếu có unique constraint cho name
+                if (lowerCaseMsg.contains("slug") || lowerCaseMsg.contains("products_slug_key")) { // Kiểm tra cả text và tên constraint (ví dụ)
+                     bindingResult.rejectValue("slug", "duplicate.slug", "Slug '" + product.getSlug() + "' đã tồn tại. Vui lòng sửa tên sản phẩm hoặc slug.");
+                } else if (lowerCaseMsg.contains("name") || lowerCaseMsg.contains("products_name_key")) { // Ví dụ nếu có unique constraint cho name
                      bindingResult.rejectValue("name", "duplicate.name", "Tên sản phẩm '" + product.getName() + "' đã tồn tại.");
                 } else {
                      // Lỗi ràng buộc khác không xác định
