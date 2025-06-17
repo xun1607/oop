@@ -35,13 +35,11 @@ public class DataLoader implements CommandLineRunner {
     Product createProductIfNotFound(String name, String slug, String description,
                                     BigDecimal defaultPrice, String imageUrl, Category category,
                                     Map<String, BigDecimal> sizeOptions) { // Thêm tham số sizeOptions
-        Optional<Product> prodOpt = productRepository.findBySlug(slug);
+        Optional<Product> prodOpt = productRepository.findByName(name);
         if (prodOpt.isEmpty()) {
             Product newProduct = new Product();
             newProduct.setName(name);
-            // TODO: Nên gọi hàm tạo slug chuẩn ở đây nếu slug chưa được chuẩn hóa
-            // newProduct.setSlug(ProductService.generateSlug(slug)); // Ví dụ
-            newProduct.setSlug(slug); // Tạm thời giữ nguyên slug truyền vào
+           
             newProduct.setDescription(description);
             newProduct.setPrice(defaultPrice); // Giá mặc định/cơ bản
             newProduct.setImageUrl(imageUrl); // URL ảnh mẫu (vd: /img/...)
@@ -56,7 +54,7 @@ public class DataLoader implements CommandLineRunner {
             }
 
             log.info("Creating product (DataLoader): Name='{}', Slug='{}', Image='{}', Sizes='{}'",
-                     name, newProduct.getSlug(), imageUrl, newProduct.getSizeOptions());
+                     name, newProduct.getName(), imageUrl, newProduct.getSizeOptions());
             return productRepository.save(newProduct);
         } else {
              log.info("Product with slug '{}' already exists. Skipping creation.", slug);
@@ -179,11 +177,10 @@ public class DataLoader implements CommandLineRunner {
 
      @Transactional
      Product createProductIfNotFound(String name, String slug, String description, BigDecimal price, String imageUrl, Category category) {
-         Optional<Product> prodOpt = productRepository.findBySlug(slug);
+         Optional<Product> prodOpt = productRepository.findByName(slug);
          if (prodOpt.isEmpty()) {
              Product newProduct = new Product();
              newProduct.setName(name);
-             newProduct.setSlug(slug);
              newProduct.setDescription(description);
              newProduct.setPrice(price);
              newProduct.setImageUrl(imageUrl); // Đảm bảo ảnh có tồn tại trong static/img hoặc là URL thật

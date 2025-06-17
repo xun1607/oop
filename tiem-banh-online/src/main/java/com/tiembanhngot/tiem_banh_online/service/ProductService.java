@@ -58,7 +58,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Optional<Product> findBySlug(String slug) {
         log.debug("Finding product by slug: {}", slug);
-        return productRepository.findBySlug(slug);
+        return productRepository.findByName(slug);
     }
 
     // --- Phương thức cho trang Admin ---
@@ -87,14 +87,6 @@ public class ProductService {
         if (!StringUtils.hasText(product.getName())) {
              throw new IllegalArgumentException("Tên sản phẩm không được để trống.");
         }
-        String targetSlug = product.getSlug();
-        if (!StringUtils.hasText(targetSlug)) {
-            targetSlug = generateSlug(product.getName());
-            log.debug("Generated initial slug: {}", targetSlug);
-        }
-        String finalSlug = ensureUniqueSlug(targetSlug, product.getProductId());
-        product.setSlug(finalSlug);
-        log.debug("Final slug set to: {}", finalSlug);
 
         // 2. ImageUrl đã được xử lý ở Controller, không cần xử lý lại ở đây
 
@@ -110,9 +102,7 @@ public class ProductService {
             log.error("Data integrity violation while saving product {}: {}", product.getName(), e.getMessage());
             if (e.getMessage() != null) {
                  String lowerCaseMsg = e.getMessage().toLowerCase();
-                 if (lowerCaseMsg.contains("slug") || lowerCaseMsg.contains("products_slug_key")) {
-                      throw new DataIntegrityViolationException("Slug '" + product.getSlug() + "' đã tồn tại. Vui lòng thử tên khác.", e);
-                 } else if (lowerCaseMsg.contains("name") || lowerCaseMsg.contains("products_name_key")) {
+                 if (lowerCaseMsg.contains("name") || lowerCaseMsg.contains("products_name_key")) {
                       throw new DataIntegrityViolationException("Tên sản phẩm '" + product.getName() + "' đã tồn tại.", e);
                  }
             }
@@ -121,21 +111,6 @@ public class ProductService {
     }
 
 
-    private String ensureUniqueSlug(String slug, Long currentProductId) {
-        String finalSlug = slug;
-        int counter = 1;
-        Optional<Product> existingProduct;
-        do {
-            existingProduct = productRepository.findBySlug(finalSlug);
-            if (existingProduct.isPresent() && (currentProductId == null || !existingProduct.get().getProductId().equals(currentProductId))) {
-                finalSlug = slug + "-" + counter++;
-                log.trace("Slug conflict detected. Trying next slug: {}", finalSlug);
-            } else {
-                break;
-            }
-        } while (true);
-        return finalSlug;
-    }
 
     @Transactional
     public void deleteProductById(Long id) {

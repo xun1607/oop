@@ -50,9 +50,6 @@ public class Product {
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true; 
 
-    @Column(length = 270, unique = true, nullable = false) 
-    private String slug; // URL-friendly unique identifier
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
