@@ -5,11 +5,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class PageController { // Hoặc một controller hiện có
+public class PageController { 
 
     @GetMapping("/chat")
     public String chatPage(Model model) {
-        model.addAttribute("currentPage", "chat"); // Cho active link header nếu có
-        return "chat"; // Trả về view templates/chat.html
+        model.addAttribute("currentPage", "chat"); 
+        return "chat"; 
     }
 }
