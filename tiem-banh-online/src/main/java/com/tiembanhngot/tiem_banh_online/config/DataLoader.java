@@ -1,18 +1,24 @@
 package com.tiembanhngot.tiem_banh_online.config;
 
-import com.tiembanhngot.tiem_banh_online.entity.*;
-import com.tiembanhngot.tiem_banh_online.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import com.tiembanhngot.tiem_banh_online.entity.Category;
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.entity.User;
+import com.tiembanhngot.tiem_banh_online.repository.CategoryRepository;
+import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
+import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -29,16 +35,17 @@ public class DataLoader implements CommandLineRunner {
     Product createProductIfNotFound(String name, String slug, String description,
                                     BigDecimal defaultPrice, String imageUrl, Category category,
                                     Map<String, BigDecimal> sizeOptions) { // Thêm tham số sizeOptions
-        Optional<Product> prodOpt = productRepository.findBySlug(slug);
+        Optional<Product> prodOpt = productRepository.findByName(name);
         if (prodOpt.isEmpty()) {
             Product newProduct = new Product();
             newProduct.setName(name);
+           
             newProduct.setDescription(description);
             newProduct.setPrice(defaultPrice); // Giá mặc định/cơ bản
             newProduct.setImageUrl(imageUrl); // URL ảnh mẫu (vd: /img/...)
             newProduct.setCategory(category);
             newProduct.setIsAvailable(true);
-
+            newProduct.setCategory(category);
             // Set size options nếu được cung cấp và không rỗng
             if (sizeOptions != null && !sizeOptions.isEmpty()) {
                 newProduct.setSizeOptions(new HashMap<>(sizeOptions)); // Tạo bản sao để an toàn
@@ -47,7 +54,7 @@ public class DataLoader implements CommandLineRunner {
             }
 
             log.info("Creating product (DataLoader): Name='{}', Slug='{}', Image='{}', Sizes='{}'",
-                     name, newProduct.getSlug(), imageUrl, newProduct.getSizeOptions());
+                     name, newProduct.getName(), imageUrl, newProduct.getSizeOptions());
             return productRepository.save(newProduct);
         } else {
              log.info("Product with slug '{}' already exists. Skipping creation.", slug);
@@ -67,10 +74,10 @@ public class DataLoader implements CommandLineRunner {
         // createUserIfNotFound("customer@email.com", "Customer Name", "Cust123", "0911111111", customerRole);
 
         // 3. Tạo Categories
-        Category banhKem = createCategoryIfNotFound("Bánh Kem", "Các loại bánh kem sinh nhật, lễ kỷ niệm", "banh-kem");
-        Category pastry = createCategoryIfNotFound("Pastry", "Bánh ngọt kiểu Âu", "pastry");
-        Category banhMi = createCategoryIfNotFound("Bánh Mì Ngọt", "Các loại bánh mì ăn sáng, ăn nhẹ", "banh-mi-ngot");
-        Category cookies = createCategoryIfNotFound("Cookies", "Bánh quy các loại", "cookies");
+        Category banhKem = createCategoryIfNotFound("Bánh Kem", "Các loại bánh kem sinh nhật, lễ kỷ niệm");
+        Category pastry = createCategoryIfNotFound("Pastry", "Bánh ngọt kiểu Âu");
+        Category banhMi = createCategoryIfNotFound("Bánh Mì Ngọt", "Các loại bánh mì ăn sáng, ăn nhẹ");
+        Category cookies = createCategoryIfNotFound("Cookies", "Bánh quy các loại");
 
         // --- 4. Tạo Products ---
         // Đảm bảo đường dẫn ảnh trỏ đến file có thật trong /static/img/...
@@ -166,27 +173,14 @@ public class DataLoader implements CommandLineRunner {
         return userOpt.get();
     }
 
-    @Transactional
-    Category createCategoryIfNotFound(String name, String description, String slug) {
-         Optional<Category> catOpt = categoryRepository.findBySlug(slug);
-         if (catOpt.isEmpty()) {
-             Category newCategory = new Category();
-             newCategory.setName(name);
-             newCategory.setDescription(description);
-             newCategory.setSlug(slug);
-             log.info("Creating category: {}", name);
-             return categoryRepository.save(newCategory);
-         }
-         return catOpt.get();
-    }
+    
 
      @Transactional
      Product createProductIfNotFound(String name, String slug, String description, BigDecimal price, String imageUrl, Category category) {
-         Optional<Product> prodOpt = productRepository.findBySlug(slug);
+         Optional<Product> prodOpt = productRepository.findByName(slug);
          if (prodOpt.isEmpty()) {
              Product newProduct = new Product();
              newProduct.setName(name);
-             newProduct.setSlug(slug);
              newProduct.setDescription(description);
              newProduct.setPrice(price);
              newProduct.setImageUrl(imageUrl); // Đảm bảo ảnh có tồn tại trong static/img hoặc là URL thật
@@ -197,4 +191,19 @@ public class DataLoader implements CommandLineRunner {
          }
          return prodOpt.get();
      }
+    @Transactional
+    Category createCategoryIfNotFound(String name, String description) {
+         Optional<Category> catOpt = categoryRepository.findByName(name);
+         if (catOpt.isEmpty()) {
+             Category newCategory = new Category();
+             newCategory.setName(name);
+             newCategory.setDescription(description);
+             log.info("Creating category: {}", name);
+             Category saved = categoryRepository.save(newCategory);
+            categoryRepository.flush();
+            log.info("Created category with ID = {}", saved.getCategoryId());
+             return saved;
+         }
+         return catOpt.get();
+    }
 }
