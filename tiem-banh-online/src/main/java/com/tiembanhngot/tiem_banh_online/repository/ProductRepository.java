@@ -1,6 +1,7 @@
 package com.tiembanhngot.tiem_banh_online.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,7 @@ import com.tiembanhngot.tiem_banh_online.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-
+    Optional<Product> findByName(String slug);
     List<Product> findByCategory(Category category);
     List<Product> findByCategoryAndIsAvailableTrue(Category category);
     List<Product> findByIsAvailableTrueOrderByCreatedAtDesc();
