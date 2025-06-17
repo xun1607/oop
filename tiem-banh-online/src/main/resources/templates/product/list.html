@@ -14,50 +14,62 @@
     <main class="container mt-4 mb-5 flex-grow-1">
         <h1 class="mb-4 text-center display-5" style="font-family: 'Pacifico', cursive; color: #a0522d;">Khám Phá Bánh Ngọt</h1>
 
-        <!-- Hiển thị thông báo (nếu có) -->
+        <!-- Thông báo -->
         <div th:if="${cartMessageSuccess}" class="alert alert-success alert-dismissible fade show small" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i><span th:text="${cartMessageSuccess}"></span>
             <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-         <div th:if="${cartMessageError}" class="alert alert-danger alert-dismissible fade show small" role="alert">
-             <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${cartMessageError}"></span>
+        <div th:if="${cartMessageError}" class="alert alert-danger alert-dismissible fade show small" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${cartMessageError}"></span>
             <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-             <div th:each="product : ${products}" class="col">
-                 <div class="card h-100 product-card shadow-sm border-light text-center">
-                     <a th:href="@{/products/{slug}(slug=${product.slug})}" class="product-card-img-wrapper">
-                          <img th:src="@{${product.imageUrl ?: '/img/placeholder.png'}}" class="card-img-top product-card-img" th:alt="${product.name}">
-                     </a>
-                     <div class="card-body d-flex flex-column">
-                         <h5 class="card-title product-name mb-1 fs-6">
-                              <a th:href="@{/products/{slug}(slug=${product.slug})}" th:text="${product.name}" class="product-link">Tên sản phẩm</a>
-                         </h5>
-                         <p class="card-text product-price mb-3" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Giá</p>
-                         <div class="mt-auto d-flex justify-content-center align-items-center"> <!-- Căn chỉnh các nút -->
-                             <!-- **CHỈ GIỮ LẠI MỘT FORM** -->
-                             <form th:action="@{/cart/add}" method="post" class="d-inline me-2"> <!-- Thêm me-2 để tạo khoảng cách -->
-                                 <input type="hidden" name="productId" th:value="${product.productId}" />
-                                 <input type="hidden" name="quantity" value="1" />
-                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                 <button type="submit" class="btn btn-sm btn-outline-primary">
-                                     <i class="bi bi-cart-plus"></i> Thêm vào giỏ
-                                 </button>
-                             </form>
-                             <!-- Nút xem chi tiết -->
-                             <a th:href="@{/products/{slug}(slug=${product.slug})}" class="btn btn-sm btn-link text-secondary p-1" title="Xem chi tiết">
-                                   <i class="bi bi-search"></i>
-                             </a>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-            <!-- Thông báo nếu không có sản phẩm -->
+
+            <div th:each="product : ${products}" class="col">
+                <div class="card h-100 product-card shadow-sm border-light text-center">
+                    <!-- Ảnh và link chi tiết -->
+                    <a th:href="@{/products/{id}(id=${product.productId})}" class="product-card-img-wrapper">
+                        <img th:src="@{${product.imageUrl ?: '/img/placeholder.png'}}" class="card-img-top product-card-img" th:alt="${product.name}">
+                    </a>
+
+
+                    <div class="card-body d-flex flex-column">
+                        <!-- Tên sản phẩm -->
+                        <h5 class="card-title product-name mb-1 fs-6">
+                            <a th:href="@{/products/{id}(id=${product.productId})}" th:text="${product.name}" class="product-link">Tên sản phẩm</a>
+                        </h5>
+
+                        <!-- Giá -->
+                        <p class="card-text product-price mb-3" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Giá</p>
+
+                        <!-- Nút -->
+                        <div class="mt-auto d-flex justify-content-center align-items-center">
+                            <!-- Nút thêm vào giỏ -->
+                            <form th:action="@{/cart/add}" method="post" class="d-inline me-2">
+                                <input type="hidden" name="productId" th:value="${product.productId}" />
+                                <input type="hidden" name="quantity" value="1" />
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                </button>
+                            </form>
+
+                            <!-- Nút xem chi tiết -->
+                            <a th:href="@{/products/{id}(id=${product.productId})}" class="btn btn-sm btn-link text-secondary p-1" title="Xem chi tiết">
+                                <i class="bi bi-search"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nếu không có sản phẩm -->
+
             <div th:if="${products == null or #lists.isEmpty(products)}" class="col-12">
-                 <div class="alert alert-info text-center my-5">
-                     <p class="lead">Hiện chưa có sản phẩm nào.</p>
-                 </div>
+                <div class="alert alert-info text-center my-5">
+                    <p class="lead">Hiện chưa có sản phẩm nào.</p>
+                </div>
             </div>
         </div>
     </main>
