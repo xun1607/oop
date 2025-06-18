@@ -47,8 +47,8 @@
                                         </a>
                                     </th>
                                     <th scope="col" style="width: 30%;">
-                                        <a class="text-white text-decoration-none" th:href="@{/admin/categories(size=${categoryPage.size}, sort='slug,' + ${sortField == 'slug' ? reverseSortDir : 'asc'})}">
-                                            Slug <i th:classappend="${sortField == 'slug' ? (sortDir == 'ASC' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-filter'}"></i>
+                                        <a class="text-white text-decoration-none" th:href="@{/admin/categories(size=${categoryPage.size}, sort='name,' + ${sortField == 'name' ? reverseSortDir : 'asc'})}">
+                                            Name <i th:classappend="${sortField == 'name' ? (sortDir == 'ASC' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-filter'}"></i>
                                         </a>
                                     </th>
                                     <th scope="col" style="width: 15%;">Mô Tả Ngắn</th>
@@ -59,7 +59,7 @@
                                 <tr th:each="category : ${categoryPage.content}">
                                     <td th:text="${category.categoryId}">1</td>
                                     <td th:text="${category.name}">Category Name</td>
-                                    <td th:text="${category.slug}">category-slug</td>
+                                    <td th:text="${category.name}">category-name</td>
                                     <!-- Hiển thị mô tả ngắn gọn -->
                                     <td th:text="${#strings.abbreviate(category.description, 50)}">Short description...</td>
                                     <td class="text-center">

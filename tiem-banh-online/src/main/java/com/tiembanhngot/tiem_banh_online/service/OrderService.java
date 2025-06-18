@@ -195,6 +195,9 @@ public class OrderService {
         log.debug("Fetching orders for user ID: {} with pagination: {}", user.getUserId(), pageable);
         return orderRepository.findByUser(user, pageable);
     }
+    public long countOrdersByStatus(String status) {
+        return orderRepository.countByStatusIgnoreCase(status); 
+    }
     
     public long countTotalProducts() {
         return productRepository.count();

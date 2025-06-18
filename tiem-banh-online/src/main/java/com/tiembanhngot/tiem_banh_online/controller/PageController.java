@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class PageController { 
 
-    @GetMapping("/chat")
+    @GetMapping("/tiembanh")
     public String chatPage(Model model) {
         model.addAttribute("currentPage", "chat"); 
         return "chat"; 
