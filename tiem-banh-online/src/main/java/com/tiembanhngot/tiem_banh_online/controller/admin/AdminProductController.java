@@ -143,6 +143,13 @@ public class AdminProductController {
                     (isNew ? "Đã thêm" : "Đã cập nhật") + " sản phẩm '" + product.getName() + "' thành công!");
             return "redirect:/admin/products";
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> ec564f926ffa3f8949fc88a6bcbe14ae13c1b6f9
+>>>>>>> main
         } catch (IOException e) {
             log.error("Admin: Lỗi lưu ảnh: {}", e.getMessage());
             model.addAttribute("errorMessage", "Lỗi lưu ảnh sản phẩm.");

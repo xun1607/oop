@@ -14,18 +14,23 @@ import org.springframework.web.server.ResponseStatusException;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
 import com.tiembanhngot.tiem_banh_online.service.ProductService;
 
+import lombok.extern.slf4j.Slf4j;
+
+
 
 @Controller
 @RequestMapping("/products")
+@Slf4j
 public class ProductPageController {
     @Autowired
     private ProductService productService;
 
     @GetMapping
-    public String listProducts(Model model) { // Thêm Model
+    public String listProducts(Model model) { 
         List<Product> products = productService.findAllAvailableProducts();
         model.addAttribute("products", products);
         model.addAttribute("currentPage", "products");
+        log.info("Rendering product list page with {} products", products.size());
         return "product/list";
     }
 
@@ -34,9 +39,11 @@ public class ProductPageController {
         model.addAttribute("currentPage", "products");
         Product product = productService.findById(id)
                 .orElseThrow(() -> {
+                    log.warn("Product not found with ID: {}", id);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sản phẩm với ID: " + id);
                 });
         model.addAttribute("product", product);
+        log.debug("Rendering product detail page for product: {}", product.getName());
         return "product/detail";
     }
 }
