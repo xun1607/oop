@@ -27,7 +27,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // --- CHỈ GIỮ LẠI MỘT BEAN securityFilterChain ---
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -37,7 +36,7 @@ public class SecurityConfig {
                         "/products",
                         "/products/*",
                         "/api/v1/products/**",
-                        "/css/**", "/js/**", "/img/**", "/webjars/**", "/favicon.ico", "/uploads/**", // Thêm /uploads/**
+                        "/css/**", "/js/**", "/img/**", "/webjars/**", "/favicon.ico", "/uploads/**", 
                         "/login", "/register",
                         "/error"
                 ).permitAll()
@@ -45,7 +44,7 @@ public class SecurityConfig {
                         "/cart/**",
                         "/checkout/**",
                         "/account/**",
-                        "/orders/**" // User's own orders access (handled by /account/orders)
+                        "/orders/**"
                 ).authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
@@ -58,20 +57,15 @@ public class SecurityConfig {
                 .permitAll()
             )
             .logout(logout -> logout
-                // Sửa lại logout request matcher nếu cần, POST thường an toàn hơn
                  .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST"))
                 .logoutSuccessUrl("/login?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             );
-            // .csrf(csrf -> csrf.disable()); // Bật lại CSRF nếu có thể
-
         return http.build();
     }
-    // --- KẾT THÚC BEAN securityFilterChain ---
 
-    // --- Bean AuthenticationManager giữ nguyên ---
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
