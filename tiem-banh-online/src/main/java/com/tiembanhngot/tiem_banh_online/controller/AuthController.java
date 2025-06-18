@@ -53,7 +53,7 @@ public class AuthController {
             return "register";
         }
 
-        redirectAttributes.addFlashAttribute("registrationSuccess", "Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+        redirectAttributes.addFlashAttribute("registrationSuccess", "Đăng ký tài khoản thành công!<br> Vui lòng đăng nhập.");
         return "redirect:/login";
         
     }
