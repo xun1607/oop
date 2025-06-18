@@ -30,133 +30,43 @@ public class DataLoader implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // === CHỈ GIỮ LẠI PHIÊN BẢN PHƯƠNG THỨC NÀY (7 THAM SỐ) ===
-    @Transactional // Đặt Transactional ở đây cũng được
-    Product createProductIfNotFound(String name, String slug, String description,
+    @Transactional
+    Product createProductIfNotFound(String name, String description,
                                     BigDecimal defaultPrice, String imageUrl, Category category,
-                                    Map<String, BigDecimal> sizeOptions) { // Thêm tham số sizeOptions
-        Optional<Product> prodOpt = productRepository.findBySlug(slug);
+                                    Map<String, BigDecimal> sizeOptions) {
+        Optional<Product> prodOpt = productRepository.findByName(name); // Tìm theo tên
         if (prodOpt.isEmpty()) {
             Product newProduct = new Product();
             newProduct.setName(name);
-            // TODO: Nên gọi hàm tạo slug chuẩn ở đây nếu slug chưa được chuẩn hóa
-            // newProduct.setSlug(ProductService.generateSlug(slug)); // Ví dụ
-            newProduct.setSlug(slug); // Tạm thời giữ nguyên slug truyền vào
             newProduct.setDescription(description);
-            newProduct.setPrice(defaultPrice); // Giá mặc định/cơ bản
-            newProduct.setImageUrl(imageUrl); // URL ảnh mẫu (vd: /img/...)
+            newProduct.setPrice(defaultPrice);
+            newProduct.setImageUrl(imageUrl);
             newProduct.setCategory(category);
             newProduct.setIsAvailable(true);
-            newProduct.setCategory(category);
-            // Set size options nếu được cung cấp và không rỗng
-            if (sizeOptions != null && !sizeOptions.isEmpty()) {
-                newProduct.setSizeOptions(new HashMap<>(sizeOptions)); // Tạo bản sao để an toàn
-            } else {
-                 newProduct.setSizeOptions(new HashMap<>()); // Luôn khởi tạo Map rỗng
-            }
+            newProduct.setSizeOptions(sizeOptions != null ? new HashMap<>(sizeOptions) : new HashMap<>());
 
-            log.info("Creating product (DataLoader): Name='{}', Slug='{}', Image='{}', Sizes='{}'",
-                     name, newProduct.getSlug(), imageUrl, newProduct.getSizeOptions());
+            log.info("Creating product (DataLoader): Name='{}', Image='{}', Sizes='{}'",
+                     name, imageUrl, newProduct.getSizeOptions());
             return productRepository.save(newProduct);
         } else {
-             log.info("Product with slug '{}' already exists. Skipping creation.", slug);
-             return prodOpt.get();
+            log.info("Product '{}' already exists. Skipping creation.", name);
+            return prodOpt.get();
         }
     }
-    // === KẾT THÚC PHIÊN BẢN PHƯƠNG THỨC MỚI ===
 
-
-    @Override
-    @Transactional // Đảm bảo tất cả các thao tác DB trong hàm này là một giao dịch
-    public void run(String... args) throws Exception {
-        log.info("Loading initial data...");
-
-        // 2. Tạo User Admin
-        createUserIfNotFound("admin@tiembanh.com", "Admin User", "Admin123", "0900000000", User.Role.ADMIN);
-        // createUserIfNotFound("customer@email.com", "Customer Name", "Cust123", "0911111111", customerRole);
-
-        // 3. Tạo Categories
-        Category banhKem = createCategoryIfNotFound("Bánh Kem", "Các loại bánh kem sinh nhật, lễ kỷ niệm");
-        Category pastry = createCategoryIfNotFound("Pastry", "Bánh ngọt kiểu Âu");
-        Category banhMi = createCategoryIfNotFound("Bánh Mì Ngọt", "Các loại bánh mì ăn sáng, ăn nhẹ");
-        Category cookies = createCategoryIfNotFound("Cookies", "Bánh quy các loại");
-
-        // --- 4. Tạo Products ---
-        // Đảm bảo đường dẫn ảnh trỏ đến file có thật trong /static/img/...
-        // Đảm bảo truyền tham số thứ 7 (sizeOptions) là null hoặc Map
-
-        if (banhKem != null) {
-            // Sản phẩm có size
-            Map<String, BigDecimal> dauSizes = new HashMap<>();
-            dauSizes.put("Nhỏ (18cm)", new BigDecimal("350000.00"));
-            dauSizes.put("Vừa (22cm)", new BigDecimal("450000.00"));
-            dauSizes.put("Lớn (25cm)", new BigDecimal("550000.00"));
-            createProductIfNotFound(
-                "Bánh Kem Dâu Tươi", "banh-kem-dau-tuoi",
-                "Bánh kem mềm mịn với lớp kem tươi và dâu tây Đà Lạt.",
-                new BigDecimal("350000.00"), // Giá mặc định (size nhỏ nhất)
-                "/img/products/banhkem_dau.jpg", // <<< Đảm bảo ảnh này tồn tại
-                banhKem,
-                dauSizes // <<< Truyền Map size vào
-            );
-
-            // Sản phẩm không có size
-            createProductIfNotFound(
-                "Bánh Kem Chocolate", "banh-kem-chocolate",
-                "Cốt bánh chocolate ẩm, phủ ganache chocolate đậm đà.",
-                new BigDecimal("380000.00"),
-                "/img/products/banhkem_socola.jpg", // <<< Đảm bảo ảnh này tồn tại
-                banhKem,
-                null // <<< Truyền null cho sizeOptions
-            );
+    @Transactional
+    Category createCategoryIfNotFound(String name, String description) {
+        Optional<Category> catOpt = categoryRepository.findByName(name);
+        if (catOpt.isEmpty()) {
+            Category newCategory = new Category();
+            newCategory.setName(name);
+            newCategory.setDescription(description);
+            log.info("Creating category: {}", name);
+            Category saved = categoryRepository.save(newCategory);
+            categoryRepository.flush();
+            return saved;
         }
-
-        if (pastry != null) {
-             // Sản phẩm không có size
-            createProductIfNotFound(
-                "Croissant Bơ", "croissant-bo",
-                "Bánh sừng bò ngàn lớp, thơm lừng mùi bơ Pháp.",
-                new BigDecimal("30000.00"),
-                "/img/products/croissant.jpg", // <<< Đảm bảo ảnh này tồn tại
-                pastry,
-                null // <<< Truyền null
-            );
-             // Sản phẩm không có size
-            createProductIfNotFound(
-                "Pain au Chocolat", "pain-au-chocolat",
-                "Bánh mì cuộn socola đen.",
-                new BigDecimal("35000.00"),
-                "/img/products/PainauChocolat.jpg", // <<< Đảm bảo ảnh này tồn tại
-                pastry,
-                null // <<< Truyền null
-            );
-        }
-
-        if (banhMi != null) {
-             // Sản phẩm không có size
-             createProductIfNotFound(
-                 "Bánh Mì Xúc Xích Phô Mai", "banh-mi-xuc-xich-phomai",
-                 "Bánh mì mềm kẹp xúc xích và phô mai tan chảy.",
-                 new BigDecimal("25000.00"),
-                 "/img/products/banh_mi_xuc_xich_pho_mai.jpg", // <<< Đảm bảo ảnh này tồn tại
-                 banhMi,
-                 null // <<< Truyền null
-             );
-        }
-
-        if (cookies != null) {
-             // Sản phẩm không có size
-             createProductIfNotFound(
-                 "Cookies Socola Chip", "cookies-socola-chip",
-                 "Bánh quy bơ giòn rụm với hạt socola.",
-                 new BigDecimal("15000.00"),
-                 "/img/products/banh_quy_socola.png", // <<< Đảm bảo ảnh này tồn tại
-                 cookies,
-                 null // <<< Truyền null
-             );
-        }
-
-        log.info("Finished loading initial data.");
+        return catOpt.get();
     }
 
     @Transactional
@@ -166,7 +76,7 @@ public class DataLoader implements CommandLineRunner {
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setFullName(fullName);
-            newUser.setPasswordHash(passwordEncoder.encode(rawPassword)); // Mã hóa mật khẩu
+            newUser.setPasswordHash(passwordEncoder.encode(rawPassword));
             newUser.setPhoneNumber(phone);
             newUser.setRole(role);
             log.info("Creating user: {}", email);
@@ -175,38 +85,61 @@ public class DataLoader implements CommandLineRunner {
         return userOpt.get();
     }
 
-    
-
-     @Transactional
-     Product createProductIfNotFound(String name, String slug, String description, BigDecimal price, String imageUrl, Category category) {
-         Optional<Product> prodOpt = productRepository.findBySlug(slug);
-         if (prodOpt.isEmpty()) {
-             Product newProduct = new Product();
-             newProduct.setName(name);
-             newProduct.setSlug(slug);
-             newProduct.setDescription(description);
-             newProduct.setPrice(price);
-             newProduct.setImageUrl(imageUrl); // Đảm bảo ảnh có tồn tại trong static/img hoặc là URL thật
-             newProduct.setCategory(category);
-             newProduct.setIsAvailable(true);
-             log.info("Creating product: {}", name);
-             return productRepository.save(newProduct);
-         }
-         return prodOpt.get();
-     }
+    @Override
     @Transactional
-    Category createCategoryIfNotFound(String name, String description) {
-         Optional<Category> catOpt = categoryRepository.findByName(name);
-         if (catOpt.isEmpty()) {
-             Category newCategory = new Category();
-             newCategory.setName(name);
-             newCategory.setDescription(description);
-             log.info("Creating category: {}", name);
-             Category saved = categoryRepository.save(newCategory);
-            categoryRepository.flush();
-            log.info("Created category with ID = {}", saved.getCategoryId());
-             return saved;
-         }
-         return catOpt.get();
+    public void run(String... args) throws Exception {
+        log.info("Loading initial data...");
+
+        Category bread = createCategoryIfNotFound("Bread", "Various types of European-style bread and croissants.");
+        Category cake = createCategoryIfNotFound("Cake", "Birthday and celebration cakes.");
+        Category brunch = createCategoryIfNotFound("Brunch", "Light meals and brunch items.");
+        Category dessert = createCategoryIfNotFound("Dessert", "Mini cakes and sweet treats.");
+        Category macaroon = createCategoryIfNotFound("Macaroon", "Specialty French-style macaroons.");
+
+        if (bread != null) {
+            createProductIfNotFound("Coconut Charcoal Croissant", "Coconut, Milk, Charcoal", new BigDecimal("38000"), "/img/coconut-charcoal-croissant.png", bread, null);
+            createProductIfNotFound("Corn Sausage Croissant", "Sausage, Corn, Cheese, Egg", new BigDecimal("42000"), "/img/corn-sausage-croissant.png", bread, null);
+            createProductIfNotFound("Cream Cheese Brioche", "Creamcheese, Egg, Milk", new BigDecimal("36000"), "/img/cream-cheese-brioche.png", bread, null);
+            createProductIfNotFound("Cream Soboro", "Chocolate, Peanut, Fresh cream, Egg", new BigDecimal("40000"), "/img/cream-soboro.png", bread, null);
+            createProductIfNotFound("Baguette", "Flour, Levain, Water", new BigDecimal("28000"), "/img/baguette.png", bread, null);
+            createProductIfNotFound("Crookie", "Butter, Egg, Chocolate", new BigDecimal("35000"), "/img/crookie.png", bread, null);
+            createProductIfNotFound("Dark Chocolate Donut", "Dark chocolate, Milk chocolate, Egg", new BigDecimal("30000"), "/img/dark-chocolate-donut.png", bread, null);
+            createProductIfNotFound("Egg Tart Portugal", "Egg, Fresh cream, Vanilla", new BigDecimal("28000"), "/img/egg-tart-portugal.png", bread, null);
+        }
+
+        if (cake != null) {
+            createProductIfNotFound("Beloved Darling", "Blueberry, Fresh cream, Yogurt", new BigDecimal("265000"), "/img/beloved-darling.png", cake, null);
+            createProductIfNotFound("A Little Grace", "Carrot, Creamcheese, Walnut, Cinnamon", new BigDecimal("260000"), "/img/a-little-grace.png", cake, null);
+            createProductIfNotFound("Little Hopper", "Fresh cream, Dark chocolate, Cacao powder", new BigDecimal("300000"), "/img/little-hopper.png", cake, null);
+            createProductIfNotFound("Red Velvet", "Vanilla bean, Milk, Mascarpone", new BigDecimal("200000"), "/img/red-velvet.png", cake, null);
+            createProductIfNotFound("One Sunny Day", "Strawberry, Fresh cream, Milk", new BigDecimal("350000"), "/img/one-sunny-day.png", cake, null);
+            createProductIfNotFound("The Blessing", "Strawberry, Vanilla, Milk", new BigDecimal("500000"), "/img/the-blessing.png", cake, null);
+        }
+
+        if (brunch != null) {
+            createProductIfNotFound("Cajun Chicken Salad", "Cajun chicken salad", new BigDecimal("150000"), "/img/cajun-chicken-salad.png", brunch, null);
+            createProductIfNotFound("Cranberry Chicken Sandwich", "Chicken breast, Cranberry, Walnut", new BigDecimal("90000"), "/img/cranberry-chicken-sandwich.png", brunch, null);
+            createProductIfNotFound("Egg Mayo Sandwich", "Egg, Mayonnaise, Strawberry", new BigDecimal("95000"), "/img/egg-mayo-sandwich.png", brunch, null);
+            createProductIfNotFound("Ham Cheese Danish", "Tomato, Ham, Cheese", new BigDecimal("100000"), "/img/ham-cheese-danish.png", brunch, null);
+            createProductIfNotFound("Sweet Chili Cold Pasta", "Chicken, Cheese, Spaghetti", new BigDecimal("72000"), "/img/sweet-chili-cold-pasta.png", brunch, null);
+        }
+
+        if (dessert != null) {
+            createProductIfNotFound("Basque Cheesecake (Piece)", "Fresh cream, Creamcheese, Vanilla", new BigDecimal("60000"), "/img/basque-cheesecake-piece.png", dessert, null);
+            createProductIfNotFound("Black&Pink Brownie", "White chocolate, Strawberry, Dark chocolate", new BigDecimal("65000"), "/img/black-pink-brownie.png", dessert, null);
+            createProductIfNotFound("Carrot Cake (Piece)", "Carrot, Creamcheese, Cinnamon, Walnut", new BigDecimal("55000"), "/img/carrot-cake-piece.png", dessert, null);
+            createProductIfNotFound("Cream Cheese Roll (Piece)", "Creamcheese, Fresh cream, Vanilla bean", new BigDecimal("50000"), "/img/cream-cheese-roll-piece.png", dessert, null);
+            createProductIfNotFound("Dark Chocolate Roll (Piece)", "Dark chocolate, Fresh cream, Cacao powder", new BigDecimal("56000"), "/img/dark-chocolate-roll-piece.png", dessert, null);
+        }
+
+        if (macaroon != null) {
+            createProductIfNotFound("Big Macaroon Cheese Pretzel", "Smoke cheese, Pretzel, Fresh cream", new BigDecimal("45000"), "/img/big-macaroon-cheese-pretzel.png", macaroon, null);
+            createProductIfNotFound("Big Macaroon Chocolat", "Cacao nibs, Dark chocolat, Almond", new BigDecimal("47000"), "/img/big-macaroon-chocolat.png", macaroon, null);
+            createProductIfNotFound("Big Macaroon Coconut", "Coconut, Coconut milk, Almond", new BigDecimal("46000"), "/img/big-macaroon-coconut.png", macaroon, null);
+            createProductIfNotFound("Big Macaroon Lemon", "Lemon, White chocolat, Fresh cream", new BigDecimal("44000"), "/img/big-macaroon-lemon.png", macaroon, null);
+            createProductIfNotFound("Big Macaroon Matcha", "Matcha, Dark chocolat, Almond", new BigDecimal("48000"), "/img/big-macaroon-matcha.png", macaroon, null);
+        }
+
+        log.info("Finished loading product data.");
     }
 }

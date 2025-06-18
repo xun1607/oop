@@ -1,5 +1,9 @@
 package com.tiembanhngot.tiem_banh_online.controller;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> ec564f926ffa3f8949fc88a6bcbe14ae13c1b6f9
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +19,11 @@ import com.tiembanhngot.tiem_banh_online.entity.Product;
 import com.tiembanhngot.tiem_banh_online.service.ProductService;
 
 import lombok.extern.slf4j.Slf4j;
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> ec564f926ffa3f8949fc88a6bcbe14ae13c1b6f9
 
 @Controller
 @RequestMapping("/products")
@@ -24,7 +33,7 @@ public class ProductPageController {
     private ProductService productService;
 
     @GetMapping
-    public String listProducts(Model model) { // Thêm Model
+    public String listProducts(Model model) { 
         List<Product> products = productService.findAllAvailableProducts();
         model.addAttribute("products", products);
         model.addAttribute("currentPage", "products");
@@ -35,13 +44,15 @@ public class ProductPageController {
     @GetMapping("/{id}")
     public String productDetail(@PathVariable Long id, Model model) {
         model.addAttribute("currentPage", "products");
-
         Product product = productService.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Product not found with ID: {}", id);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy sản phẩm với ID: " + id);
                 });
+<<<<<<< HEAD
 
+=======
+>>>>>>> ec564f926ffa3f8949fc88a6bcbe14ae13c1b6f9
         model.addAttribute("product", product);
         log.debug("Rendering product detail page for product: {}", product.getName());
         return "product/detail";
