@@ -34,8 +34,12 @@
             <!-- Hiển thị thông báo nếu đăng xuất thành công -->
             <div th:if="${param.logout}" class="alert alert-success" role="alert">
                 Bạn đã đăng xuất thành công.
+            <!-- Hien thi thanh cong neu dang ky thanh cong tu trang register -->
             </div>
-
+                <div th:if="${registrationSuccess}" class="alert alert-success text-center" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span th:text="${registrationSuccess}"></span>
+            </div>
             <!-- Form đăng nhập -->
             <!-- action phải khớp với loginProcessingUrl trong SecurityConfig -->
             <form th:action="@{/login}" method="post">

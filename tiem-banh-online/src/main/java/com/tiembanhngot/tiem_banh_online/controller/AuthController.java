@@ -1,18 +1,19 @@
 package com.tiembanhngot.tiem_banh_online.controller;
 
-import com.tiembanhngot.tiem_banh_online.dto.UserRegisterDTO;
-import com.tiembanhngot.tiem_banh_online.service.UserService;
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; 
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.tiembanhngot.tiem_banh_online.dto.UserRegisterDTO;
+import com.tiembanhngot.tiem_banh_online.service.UserService;
+
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @Slf4j
@@ -28,14 +29,12 @@ public class AuthController {
 
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
-        log.debug("Serving registration page request."); 
-        
         try {
             model.addAttribute("userDto", new UserRegisterDTO());
         } catch (Exception e) {
             log.error("Error creating new UserRegisterDTO", e);
             model.addAttribute("errorMessage", "Lỗi khởi tạo form đăng ký.");
-            return "error"; 
+            return "error";
         }
 
         model.addAttribute("currentPage", "register");
@@ -45,21 +44,17 @@ public class AuthController {
     @PostMapping("/register")
     public String processRegistration( @Valid @ModelAttribute("userDto") UserRegisterDTO userDto,
                                         BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) { 
-        model.addAttribute("currentPage", "register"); 
-
+        model.addAttribute("currentPage", "register");
+        
+        if (!bindingResult.hasErrors()) {   //kiem tra (email/sđt tồn tại)
+            userService.registerNewUser(userDto, bindingResult); // service tao user moi neu khong gap loi dinh dang hoac loi nghiep vu
+        }
         if (bindingResult.hasErrors()) {
             return "register";
         }
+
+        redirectAttributes.addFlashAttribute("registrationSuccess", "Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+        return "redirect:/login";
         
-        try {
-            userService.registerNewUser(userDto);
-            redirectAttributes.addFlashAttribute("registrationSuccess", "Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
-            return "redirect:/login";
-        } catch (IllegalArgumentException e) {
-            return "register";
-        } catch (Exception e){
-            model.addAttribute("registrationError", "Đã xảy ra lỗi hệ thống...");
-            return "register";
-        }
     }
 }

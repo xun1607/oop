@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Đăng Ký - Tiệm Bánh Ngon</title>
@@ -8,20 +9,47 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/custom.css}">
     <style>
-        body { background-color: #f8f9fa; }
-        .register-container { max-width: 550px; margin: 4rem auto; padding: 2.5rem; background-color: #fff; border-radius: 0.75rem; box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1); }
-        .navbar-brand { font-family: 'Pacifico', cursive; font-size: 1.8rem; color: #D2691E !important; display: block; }
-        .form-label { font-weight: 500; }
-        .invalid-feedback { font-size: 0.875em; }
-        .required-field::after { content: " *"; color: red; }
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .register-container {
+            max-width: 550px;
+            margin: 4rem auto;
+            padding: 2.5rem;
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, .1);
+        }
+
+        .navbar-brand {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #D2691E !important;
+            display: block;
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .invalid-feedback {
+            font-size: 0.875em;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
     </style>
 </head>
+
 <body class="d-flex flex-column min-vh-100">
 
     <main class="container flex-grow-1">
         <div class="register-container">
-             <div class="text-center mb-4">
-                 <a class="navbar-brand" th:href="@{/}">Tiệm Bánh Ngon</a>
+            <div class="text-center mb-4">
+                <a class="navbar-brand" th:href="@{/}">Tiệm Bánh Ngon</a>
             </div>
             <h2 class="text-center mb-4 fw-light">Tạo Tài Khoản Mới</h2>
 
@@ -29,23 +57,22 @@
             <div th:if="${registrationError}" class="alert alert-danger small p-2 text-center" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${registrationError}"></span>
             </div>
+            
 
             <!-- Form đăng ký -->
             <form th:action="@{/register}" method="post" th:object="${userDto}" novalidate>
                 <!-- CSRF Token -->
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-                <!-- **DI CHUYỂN VÀO ĐÂY:** Hiển thị lỗi validation tổng thể (nếu có) -->
-                 <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small p-2 mb-3" role="alert">
-                     <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
-                 </div>
-
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small p-2 text-center mb-3"
+                role="alert">
+                    <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+                </div>
                 <!-- Email -->
                 <div class="mb-3">
                     <label for="email" class="form-label required-field">Địa chỉ Email</label>
                     <input type="email" class="form-control" th:field="*{email}" id="email" placeholder="vidu@email.com"
-                           aria-describedby="emailHelp"
-                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" required>
+                        aria-describedby="emailHelp" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                        required>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
                     <div id="emailHelp" class="form-text">Chúng tôi sẽ không chia sẻ email của bạn.</div>
                 </div>
@@ -53,37 +80,43 @@
                 <!-- Full Name -->
                 <div class="mb-3">
                     <label for="fullName" class="form-label required-field">Họ và Tên</label>
-                    <input type="text" class="form-control" th:field="*{fullName}" id="fullName" placeholder="Nguyễn Văn An"
-                           th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid' : ''" required>
-                     <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+                    <input type="text" class="form-control" th:field="*{fullName}" id="fullName"
+                        placeholder="Nguyễn Văn An"
+                        th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid' : ''" required>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">
+                    </div>
                 </div>
 
-                 <!-- Phone Number (Optional) -->
+                <!-- Phone Number (Optional) -->
                 <div class="mb-3">
                     <label for="phoneNumber" class="form-label">Số điện thoại</label>
-                    <input type="tel" class="form-control" th:field="*{phoneNumber}" id="phoneNumber" placeholder="09xxxxxxxx"
-                            th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid' : ''">
-                     <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                    <input type="tel" class="form-control" th:field="*{phoneNumber}" id="phoneNumber"
+                        placeholder="09xxxxxxxx"
+                        th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid' : ''">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}"
+                        th:errors="*{phoneNumber}"></div>
                 </div>
 
                 <!-- Password -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label for="password" class="form-label required-field">Mật khẩu</label>
-                        <input type="password" class="form-control" th:field="*{password}" id="password" placeholder="Ít nhất 6 ký tự"
-                               aria-describedby="passwordHelp"
-                               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''" required>
-                         <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                        <input type="password" class="form-control" th:field="*{password}" id="password"
+                            placeholder="Ít nhất 6 ký tự" aria-describedby="passwordHelp"
+                            th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">
+                        </div>
                         <div id="passwordHelp" class="form-text">Độ dài tối thiểu 6 ký tự.</div>
                     </div>
                     <!-- Confirm Password -->
-                     <div class="col-md-6">
+                    <div class="col-md-6">
                         <label for="confirmPassword" class="form-label required-field">Xác nhận mật khẩu</label>
                         <input type="password" class="form-control" th:field="*{confirmPassword}" id="confirmPassword"
-                                th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid' : ''" required>
-                         <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                            th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid' : ''" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}"
+                            th:errors="*{confirmPassword}"></div>
                     </div>
-                 </div>
+                </div>
 
                 <!-- Submit Button -->
                 <div class="d-grid mb-3">
@@ -91,9 +124,10 @@
                 </div>
 
                 <!-- Links -->
-                 <div class="text-center">
+                <div class="text-center">
                     <p class="small mb-0">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập ngay</a></p>
-                     <p class="small mt-2"><a th:href="@{/}"><i class="bi bi-house-door me-1"></i>Quay lại trang chủ</a></p>
+                    <p class="small mt-2"><a th:href="@{/}"><i class="bi bi-house-door me-1"></i>Quay lại trang chủ</a>
+                    </p>
                 </div>
             </form>
         </div>
@@ -101,4 +135,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

@@ -1,20 +1,20 @@
 package com.tiembanhngot.tiem_banh_online.service;
 
-import com.tiembanhngot.tiem_banh_online.dto.UserRegisterDTO;
-import com.tiembanhngot.tiem_banh_online.entity.User;
-import com.tiembanhngot.tiem_banh_online.entity.User.Role;
-import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import org.springframework.security.crypto.password.PasswordEncoder; 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 
-import java.util.Optional;
+import com.tiembanhngot.tiem_banh_online.dto.UserRegisterDTO;
+import com.tiembanhngot.tiem_banh_online.entity.User;
+import com.tiembanhngot.tiem_banh_online.entity.User.Role;
+import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -22,29 +22,33 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; 
+    private PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-   
+
     @Transactional(readOnly = true)
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 
     @Transactional 
-    public User registerNewUser(UserRegisterDTO userDto) throws IllegalArgumentException {
+    public User registerNewUser(UserRegisterDTO userDto, BindingResult bindingResult) throws IllegalArgumentException {
         // 1. Kiểm tra email đã tồn tại chưa
         if (userRepository.existsByEmail(userDto.getEmail())) {
-            throw new IllegalArgumentException("Địa chỉ email đã được sử dụng.");
+            bindingResult.rejectValue("email", "email.exists", "Địa chỉ email này đã được sử dụng.");
         }
 
         // 2. Kiểm tra SĐT đã tồn tại chưa (nếu có nhập)
         if (StringUtils.hasText(userDto.getPhoneNumber()) &&
             userRepository.existsByPhoneNumber(userDto.getPhoneNumber()) ){
-            throw new IllegalArgumentException("Số điện thoại đã được sử dụng.");
+            bindingResult.rejectValue("phoneNumber", "phoneNumber.exists", "Số điện thoại này đã được sử dụng.");
+        }
+        // Nếu sau các bước kiểm tra, BindingResult đã có lỗi -> không tạo user nữa
+        if (bindingResult.hasErrors()) {
+        return null; // Trả về null để báo hiệu cho Controller là có lỗi
         }
 
         // 3. Tạo user mới
