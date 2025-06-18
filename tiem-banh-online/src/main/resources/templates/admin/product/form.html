@@ -21,23 +21,16 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <!-- enctype="multipart/form-data" BẮT BUỘC cho upload file -->
                 <form th:action="@{/admin/products/save}" method="post" th:object="${product}" enctype="multipart/form-data" novalidate>
-                    <!-- CSRF Token -->
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                    <!-- ID ẩn để biết là update -->
                     <input type="hidden" th:field="*{productId}" />
-                    <!-- Lưu lại imageUrl cũ phòng trường hợp không upload ảnh mới khi edit -->
                     <input type="hidden" th:field="*{imageUrl}" th:if="*{productId != null}" />
 
-                    <!-- Hiển thị lỗi validation tổng thể -->
-                     <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small p-2 mb-3" role="alert">
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small p-2 mb-3" role="alert">
                         <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
-                     </div>
-                     <!-- Hiển thị lỗi chung từ Controller -->
-                     <div th:if="${errorMessage}" class="alert alert-danger small p-2 mb-3" role="alert" th:text="${errorMessage}"></div>
+                    </div>
+                    <div th:if="${errorMessage}" class="alert alert-danger small p-2 mb-3" role="alert" th:text="${errorMessage}"></div>
 
-                     <!-- Tên Sản Phẩm -->
                     <div class="mb-3 row">
                         <label for="name" class="col-sm-3 col-form-label required-field">Tên Sản Phẩm</label>
                         <div class="col-sm-9">
@@ -47,18 +40,6 @@
                         </div>
                     </div>
 
-                     <!-- Slug (Readonly, tự tạo) -->
-                     <div class="mb-3 row">
-                        <label for="slug" class="col-sm-3 col-form-label">Slug</label>
-                        <div class="col-sm-9">
-                            <input type="text" class="form-control" th:field="*{slug}" id="slug"
-                                   th:classappend="${#fields.hasErrors('slug')} ? 'is-invalid' : ''" readonly>
-                             <div class="invalid-feedback" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}"></div>
-                             <small class="form-text text-muted">Tự động tạo từ tên (nếu để trống khi thêm mới).</small>
-                        </div>
-                    </div>
-
-                     <!-- Mô Tả -->
                     <div class="mb-3 row">
                         <label for="description" class="col-sm-3 col-form-label">Mô Tả</label>
                         <div class="col-sm-9">
@@ -68,7 +49,6 @@
                         </div>
                     </div>
 
-                    <!-- Giá -->
                     <div class="mb-3 row">
                         <label for="price" class="col-sm-3 col-form-label required-field">Giá (₫)</label>
                          <div class="col-sm-9">
@@ -77,121 +57,96 @@
                            <div class="invalid-feedback" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
                         </div>
                     </div>
-                    <!-- Trong admin/product/form.html, sau phần Giá -->
-<hr>
-<h5>Tùy chọn Kích thước & Giá (Để trống nếu dùng giá mặc định)</h5>
-<!-- Cặp 1 -->
-<div class="row mb-2 gx-2">
-    <div class="col">
-        <label class="form-label form-label-sm">Tên Size 1</label>
-        <!-- Cần đặt tên input theo cấu trúc để Controller có thể parse -->
-        <input type="text" name="sizeOptions_name_1" class="form-control form-control-sm" th:value="${product.sizeOptions?.get('key1')}"> <!-- Ví dụ lấy key1, cần logic phức tạp hơn -->
-    </div>
-    <div class="col">
-        <label class="form-label form-label-sm">Giá Size 1 (₫)</label>
-        <input type="number" step="1000" name="sizeOptions_price_1" class="form-control form-control-sm" th:value="${product.sizeOptions?.get('value1')}">
-    </div>
-</div>
- <!-- Cặp 2 -->
-<div class="row mb-2 gx-2">
-     <div class="col">
-        <label class="form-label form-label-sm">Tên Size 2</label>
-        <input type="text" name="sizeOptions_name_2" class="form-control form-control-sm">
-    </div>
-    <div class="col">
-        <label class="form-label form-label-sm">Giá Size 2 (₫)</label>
-        <input type="number" step="1000" name="sizeOptions_price_2" class="form-control form-control-sm">
-    </div>
-</div>
-<!-- Cặp 3 -->
- <div class="row mb-3 gx-2">
-     <div class="col">
-        <label class="form-label form-label-sm">Tên Size 3</label>
-        <input type="text" name="sizeOptions_name_3" class="form-control form-control-sm">
-    </div>
-    <div class="col">
-        <label class="form-label form-label-sm">Giá Size 3 (₫)</label>
-        <input type="number" step="1000" name="sizeOptions_price_3" class="form-control form-control-sm">
-    </div>
-</div>
-<hr>
-                     <!-- Danh Mục -->
-                     <div class="mb-3 row">
+
+                    <hr>
+                    <h5>Tùy chọn Kích thước & Giá (Để trống nếu dùng giá mặc định)</h5>
+                    <!-- Size options -->
+                    <div class="row mb-2 gx-2">
+                        <div class="col">
+                            <label class="form-label form-label-sm">Tên Size 1</label>
+                            <input type="text" name="sizeOptions_name_1" class="form-control form-control-sm" th:value="${product.sizeOptions?.get('key1')}">
+                        </div>
+                        <div class="col">
+                            <label class="form-label form-label-sm">Giá Size 1 (₫)</label>
+                            <input type="number" step="1000" name="sizeOptions_price_1" class="form-control form-control-sm" th:value="${product.sizeOptions?.get('value1')}">
+                        </div>
+                    </div>
+                    <div class="row mb-2 gx-2">
+                        <div class="col">
+                            <label class="form-label form-label-sm">Tên Size 2</label>
+                            <input type="text" name="sizeOptions_name_2" class="form-control form-control-sm">
+                        </div>
+                        <div class="col">
+                            <label class="form-label form-label-sm">Giá Size 2 (₫)</label>
+                            <input type="number" step="1000" name="sizeOptions_price_2" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <div class="row mb-3 gx-2">
+                        <div class="col">
+                            <label class="form-label form-label-sm">Tên Size 3</label>
+                            <input type="text" name="sizeOptions_name_3" class="form-control form-control-sm">
+                        </div>
+                        <div class="col">
+                            <label class="form-label form-label-sm">Giá Size 3 (₫)</label>
+                            <input type="number" step="1000" name="sizeOptions_price_3" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <hr>
+
+                    <div class="mb-3 row">
                         <label for="category" class="col-sm-3 col-form-label required-field">Danh Mục</label>
-                         <div class="col-sm-9">
+                        <div class="col-sm-9">
                             <select class="form-select" th:field="*{category}" id="category" required
                                     th:classappend="${#fields.hasErrors('category')} ? 'is-invalid' : ''">
                                 <option value="">-- Chọn Danh Mục --</option>
-                                <!-- Lấy danh sách categories từ Model -->
                                 <option th:each="cat : ${categories}"
                                         th:value="${cat.categoryId}"
                                         th:text="${cat.name}"
-                                        th:selected="${cat.categoryId == product?.category?.categoryId}"></option> <!-- Chọn sẵn nếu là edit -->
+                                        th:selected="${cat.categoryId == product?.category?.categoryId}"></option>
                             </select>
-                             <div class="invalid-feedback" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
                         </div>
                     </div>
 
-                     <!-- Trạng Thái Có Sẵn -->
-                     <div class="mb-3 row">
+                    <div class="mb-3 row">
                          <label class="col-sm-3 col-form-label">Trạng Thái Bán</label>
                         <div class="col-sm-9">
-                            <div class="form-check form-switch pt-2"> <!-- Thêm pt-2 để căn chỉnh -->
+                            <div class="form-check form-switch pt-2">
                                 <input class="form-check-input" type="checkbox" role="switch" id="isAvailable" th:field="*{isAvailable}">
                                 <label class="form-check-label" for="isAvailable">Đang bán (Có sẵn)</label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Upload Ảnh -->
-                    <div class="mb-3 row align-items-center"> <!-- Thêm align-items-center -->
+                    <div class="mb-3 row align-items-center">
                         <label for="imageFile" class="col-sm-3 col-form-label">Ảnh Đại Diện</label>
-                         <div class="col-sm-9">
+                        <div class="col-sm-9">
                             <input class="form-control" type="file" id="imageFile" name="imageFile" accept="image/png, image/jpeg, image/gif">
-                             <!-- Hiển thị lỗi upload ảnh -->
-                             <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></div>
-                             <small class="form-text text-muted d-block mt-1">Chọn file ảnh mới (png, jpg, gif). Để trống nếu không muốn thay đổi ảnh hiện tại.</small>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></div>
+                            <small class="form-text text-muted d-block mt-1">Chọn file ảnh mới (png, jpg, gif). Để trống nếu không muốn thay đổi ảnh hiện tại.</small>
 
-                             <!-- Hiển thị ảnh hiện tại nếu đang edit và có ảnh -->
-                             <div th:if="*{productId != null and imageUrl != null and imageUrl != ''}" class="mt-2">
-                                 <p class="mb-1 small text-muted">Ảnh hiện tại:</p>
-                                 <img th:src="@{${imageUrl}}" alt="Ảnh hiện tại" height="100" class="img-thumbnail p-1 border">
-                             </div>
+                            <div th:if="*{productId != null and imageUrl != null and imageUrl != ''}" class="mt-2">
+                                <p class="mb-1 small text-muted">Ảnh hiện tại:</p>
+                                <img th:src="@{${imageUrl}}" alt="Ảnh hiện tại" height="100" class="img-thumbnail p-1 border">
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" name="currentImageUrl" th:if="${product.productId != null}" th:value="${product.imageUrl}" />
-                    <!-- Nút bấm -->
-                     <div class="row mt-4">
-                         <div class="col-sm-9 offset-sm-3">
+
+                    <div class="row mt-4">
+                        <div class="col-sm-9 offset-sm-3">
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Lưu Sản Phẩm</button>
                             <a th:href="@{/admin/products}" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i> Hủy</a>
                         </div>
                     </div>
 
                 </form>
-            </div> <!-- end card-body -->
-        </div> <!-- end card -->
-    </div> <!-- end layout fragment -->
+            </div>
+        </div>
+    </div>
 
-    <!-- Script nếu cần, ví dụ: preview ảnh -->
     <th:block layout:fragment="scripts">
-       <!-- <script>
-            // JS để preview ảnh khi chọn file
-            const imageFile = document.getElementById('imageFile');
-            const imagePreview = document.getElementById('imagePreview'); // Cần thêm thẻ img với id này
-            if(imageFile && imagePreview) {
-                imageFile.onchange = evt => {
-                    const [file] = imageFile.files
-                    if (file) {
-                        imagePreview.src = URL.createObjectURL(file)
-                        imagePreview.style.display = 'block';
-                    } else {
-                         imagePreview.style.display = 'none';
-                    }
-                }
-            }
-       </script> -->
+       <!-- Optional scripts -->
     </th:block>
-
 </body>
 </html>

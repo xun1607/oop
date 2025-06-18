@@ -70,9 +70,13 @@ public class ProductService {
         try {
             return productRepository.save(product);
         } catch (DataIntegrityViolationException e) {
+<<<<<<< HEAD
             String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
             if (msg.contains("name")) {
                 throw new DataIntegrityViolationException("Tên sản phẩm đã tồn tại.", e);
+=======
+
+>>>>>>> origin/nnd
             }
             throw new RuntimeException("Lỗi khi lưu sản phẩm.", e);
         }
@@ -96,7 +100,10 @@ public class ProductService {
             product.setImageUrl(existing.getImageUrl());
         }
 
+<<<<<<< HEAD
         return productRepository.save(product);
+=======
+>>>>>>> origin/nnd
     }
 
     public void deleteProductById(Long id) {
