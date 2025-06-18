@@ -41,20 +41,28 @@ public class AuthController {
         return "register";
     }
 
-    @PostMapping("/register")
-    public String processRegistration( @Valid @ModelAttribute("userDto") UserRegisterDTO userDto,
-                                        BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) { 
-        model.addAttribute("currentPage", "register");
-        
-        if (!bindingResult.hasErrors()) {   //kiem tra (email/sđt tồn tại)
-            userService.registerNewUser(userDto, bindingResult); // service tao user moi neu khong gap loi dinh dang hoac loi nghiep vu
+@PostMapping("/register")
+public String processRegistration(@Valid @ModelAttribute("userDto") UserRegisterDTO userDto,
+                                  BindingResult bindingResult,
+                                  RedirectAttributes redirectAttributes,
+                                  Model model) {
+    model.addAttribute("currentPage", "register");
+
+    try {
+        if (!bindingResult.hasErrors()) {
+            userService.registerNewUser(userDto, bindingResult);
         }
+
         if (bindingResult.hasErrors()) {
             return "register";
         }
 
         redirectAttributes.addFlashAttribute("registrationSuccess", "Đăng ký tài khoản thành công!<br> Vui lòng đăng nhập.");
         return "redirect:/login";
-        
+    } catch (Exception e) {
+        model.addAttribute("registrationError", "Đã xảy ra lỗi khi đăng ký: " + e.getMessage());
+        return "register";
     }
+}
+
 }
