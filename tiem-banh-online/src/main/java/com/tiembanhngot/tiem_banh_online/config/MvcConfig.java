@@ -20,11 +20,8 @@ public class MvcConfig implements WebMvcConfigurer {
         String absoluteUploadPath = uploadPath.toFile().getAbsolutePath();
 
         // Map URL /uploads/** tới thư mục vật lý trên server
-        // Quan trọng: Thêm "file:/" cho đường dẫn tuyệt đối
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:/" + absoluteUploadPath + "/");
 
-        // Có thể thêm các resource handler khác nếu cần
-        // registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
     }
 }

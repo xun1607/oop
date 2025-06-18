@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"> 
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiệm Bánh AI</title>
-    
+    <title>Trợ Lý Hỏi Đáp - Tiệm Bánh Ngon</title>
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
-    <link rel="stylesheet" th:href="@{/css/custom.css}">
+    <link rel="stylesheet" th:href="@{/css/custom.css}"> <!-- Make sure this path is correct -->
     <style>
         #chatbox {
             height: 400px;
@@ -29,13 +30,13 @@
         .user-message {
             background-color: #0d6efd;
             color: white;
-            margin-left: auto; /* Căn phải */
+            margin-left: auto; /* Aligns to the right */
             border-bottom-right-radius: 3px;
         }
         .bot-message {
             background-color: #e9ecef;
             color: #212529;
-            margin-right: auto; /* Căn trái */
+            margin-right: auto; /* Aligns to the left */
             border-bottom-left-radius: 3px;
         }
         .message-sender {
@@ -43,7 +44,19 @@
             color: #6c757d;
             margin-bottom: 2px;
         }
-        .user-message .message-sender { text-align: right; }
+         /* Container for each message block (sender + message bubble) */
+        .message-block {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+        .message-block.user {
+            align-items: flex-end; /* Aligns content (sender + bubble) to the right */
+        }
+        .message-block.bot {
+            align-items: flex-start; /* Aligns content (sender + bubble) to the left */
+        }
+
         .typing-indicator span {
             display: inline-block;
             width: 8px;
@@ -61,25 +74,24 @@
         }
     </style>
 </head>
-<body class="d-flex flex-column min-vh-100"> 
-    <div th:replace="~{fragments/header :: header}" th:if="${false}"></div> 
-    <main class="container my-4 flex-grow-1">
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/header :: header}"></div> 
+    <main class="container my-4 flex-grow-1" id="chatContainer" >
         <h1 class="mb-4 text-center">Trợ Lý Hỏi Đáp Tiệm Bánh</h1>
-
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div id="chatbox">
-                    
-                    <div class="bot-message">
+                    <!-- Initial bot message -->
+                    <div class="message-block bot">
                         <div class="message-sender">Trợ lý ảo</div>
-                        Xin chào! Tôi có thể giúp gì cho bạn về Tiệm Bánh Ngon?
+                        <div class="bot-message">
+                            Xin chào! Tôi có thể giúp gì cho bạn về Tiệm Bánh Ngon?
+                        </div>
                     </div>
                 </div>
-
                 <div id="typingIndicator" class="text-muted small mb-2" style="display: none;">
                     Trợ lý đang soạn tin <span class="typing-indicator"><span></span><span></span><span></span></span>
                 </div>
-
                 <form id="chatForm">
                     <div class="input-group mb-3">
                         <input type="text" id="userQuery" class="form-control" placeholder="Nhập câu hỏi của bạn..." aria-label="User query" required>
@@ -92,44 +104,41 @@
         </div>
     </main>
 
-   
-    <div th:replace="~{fragments/footer :: footer}" th:if="${false}"></div>
+    <div th:replace="~{fragments/footer :: footer}"></div> 
 
- 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-   
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
     <script th:inline="javascript">
-  
         $(document).ready(function() {
             const chatbox = $('#chatbox');
             const userQueryInput = $('#userQuery');
             const chatForm = $('#chatForm');
             const sendButton = $('#sendButton');
             const typingIndicator = $('#typingIndicator');
+            const chatContainer = $('#chatContainer'); 
+
+            var token = $("meta[name='_csrf']").attr("content");
+            var header = $("meta[name='_csrf_header']").attr("content");
 
             function addMessage(message, sender, isUser) {
                 const senderName = isUser ? "Bạn" : (sender || "Trợ lý ảo");
-                const messageClass = isUser ? "user-message" : "bot-message";
-                const senderDiv = $('<div>').addClass('message-sender').text(senderName);
-                const messageDiv = $('<div>').addClass(messageClass).text(message);
+                const messageBubbleClass = isUser ? "user-message" : "bot-message";
+                const messageBlockClass = isUser ? "user" : "bot";
 
-                const containerDiv = $('<div>'); 
-                if (isUser) {
-                    containerDiv.css('text-align', 'right'); 
-                    containerDiv.append(senderDiv);
-                    containerDiv.append(messageDiv);
-                } else {
-                     containerDiv.append(senderDiv);
-                    containerDiv.append(messageDiv);
-                }
-                chatbox.append(containerDiv);
+                const senderDiv = $('<div>').addClass('message-sender').text(senderName);
+                const messageBubbleDiv = $('<div>').addClass(messageBubbleClass).text(message);
+                
+                // Create a block container for alignment
+                const messageBlockDiv = $('<div>').addClass('message-block').addClass(messageBlockClass);
+                messageBlockDiv.append(senderDiv);
+                messageBlockDiv.append(messageBubbleDiv);
+
+                chatbox.append(messageBlockDiv);
                 chatbox.scrollTop(chatbox[0].scrollHeight);
             }
 
             chatForm.on('submit', function(event) {
-                event.preventDefault(); 
+                event.preventDefault();
                 const query = userQueryInput.val().trim();
 
                 if (query === "") {
@@ -137,42 +146,57 @@
                 }
 
                 addMessage(query, "Bạn", true);
-                userQueryInput.val(''); 
-                sendButton.prop('disabled', true); 
-                typingIndicator.show(); 
-
+                userQueryInput.val('');
+                sendButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang gửi...');
+                typingIndicator.show();
 
                 $.ajax({
-                    url: '/api/v1/chat/ask', 
+                    url: /*[[@{/api/chat}]]*/ '/api/chat', // Controller endpoint
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ query: query }),
-                    
+                    data: JSON.stringify({ question: query }), 
+                    beforeSend: function(xhr) {
+                        if (header && token) {
+                        xhr.setRequestHeader(header, token);
+                        }
+                    },
                     success: function(response) {
                         if (response && response.answer) {
                             addMessage(response.answer, "Trợ lý ảo", false);
-                        } else {
-                            addMessage("Xin lỗi, tôi không nhận được phản hồi hợp lệ.", "Trợ lý ảo", false);
+                        } else if (response && response.error) {
+                             addMessage("Lỗi từ trợ lý: " + response.error, "Lỗi Hệ Thống", false);
+                        }
+                        else {
+                            addMessage("Xin lỗi, tôi không nhận được phản hồi hợp lệ từ trợ lý.", "Trợ lý ảo", false);
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.error("AJAX Error:", textStatus, errorThrown, jqXHR.responseText);
                         let errorMessage = "Đã xảy ra lỗi khi kết nối đến trợ lý. Vui lòng thử lại.";
-                        if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
-                            errorMessage = jqXHR.responseJSON.error;
-                        } else if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-                            errorMessage = jqXHR.responseJSON.message;
+                        try {
+                            const errorResponse = JSON.parse(jqXHR.responseText);
+                            if (errorResponse && errorResponse.error) {
+                                errorMessage = errorResponse.error;
+                            } else if (errorResponse && errorResponse.message) {
+                                errorMessage = errorResponse.message;
+                            }
+                        } catch (e) {
+                            // Response was not JSON or other parsing error
+                            if(jqXHR.responseText) {
+                                errorMessage = "Lỗi máy chủ: " + jqXHR.status + ". Kiểm tra console để biết thêm chi tiết.";
+                            }
                         }
                         addMessage(errorMessage, "Lỗi Hệ Thống", false);
                     },
                     complete: function() {
-                        sendButton.prop('disabled', false); 
-                        typingIndicator.hide(); 
+                        sendButton.prop('disabled', false).html('<i class="bi bi-send"></i> Gửi');
+                        typingIndicator.hide();
                     }
                 });
             });
+
+            
         });
- 
     </script>
 </body>
 </html>

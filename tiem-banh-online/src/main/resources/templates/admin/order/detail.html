@@ -72,7 +72,7 @@
                                                     th:alt="${item?.product?.name}" width="45" class="img-thumbnail me-2 order-item-img">
                                                 <div class="flex-grow-1">
                                                     <a th:if="${item?.product != null}"
-                                                        th:href="@{/products/{id}(id=${item.product.id})}"
+                                                        th:href="@{/products/{name}(name=${item.product.name})}"
                                                         th:text="${item.product.name}" target="_blank"
                                                         class="text-decoration-none text-dark fw-medium"></a>
                                                     <span th:unless="${item?.product != null}" class="text-muted fst-italic">(Sản phẩm đã xóa)</span>

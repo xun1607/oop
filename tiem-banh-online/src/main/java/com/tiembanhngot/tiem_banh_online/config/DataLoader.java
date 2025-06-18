@@ -139,6 +139,13 @@ public class DataLoader implements CommandLineRunner {
             createProductIfNotFound("Big Macaroon Lemon", "Lemon, White chocolat, Fresh cream", new BigDecimal("44000"), "/img/big-macaroon-lemon.png", macaroon, null);
             createProductIfNotFound("Big Macaroon Matcha", "Matcha, Dark chocolat, Almond", new BigDecimal("48000"), "/img/big-macaroon-matcha.png", macaroon, null);
         }
+        createUserIfNotFound(
+            "admin@tiembanhngon.vn",
+            "Quản trị viên",
+            "admin123",
+            "0000000000",
+            User.Role.ADMIN
+        );
 
         log.info("Finished loading product data.");
     }

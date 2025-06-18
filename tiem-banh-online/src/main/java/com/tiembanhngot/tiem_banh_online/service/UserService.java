@@ -40,15 +40,13 @@ public class UserService {
         if (userRepository.existsByEmail(userDto.getEmail())) {
             bindingResult.rejectValue("email", "email.exists", "Địa chỉ email này đã được sử dụng.");
         }
-
         // 2. Kiểm tra SĐT đã tồn tại chưa (nếu có nhập)
         if (StringUtils.hasText(userDto.getPhoneNumber()) &&
             userRepository.existsByPhoneNumber(userDto.getPhoneNumber()) ){
             bindingResult.rejectValue("phoneNumber", "phoneNumber.exists", "Số điện thoại này đã được sử dụng.");
         }
-        // Nếu sau các bước kiểm tra, BindingResult đã có lỗi -> không tạo user nữa
         if (bindingResult.hasErrors()) {
-        return null; // Trả về null để báo hiệu cho Controller là có lỗi
+            return null; 
         }
 
         // 3. Tạo user mới

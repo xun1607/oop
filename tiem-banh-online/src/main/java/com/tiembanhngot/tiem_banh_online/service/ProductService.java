@@ -41,6 +41,10 @@ public class ProductService {
         }
     }
 
+    public long countTotalProducts(){
+        return productRepository.count();
+    }
+    
     public List<Product> searchAvailableProducts(String query) {
         if (!StringUtils.hasText(query)) return List.of();
         return productRepository.searchAvailableProducts(query.trim());
