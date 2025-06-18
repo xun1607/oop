@@ -90,8 +90,8 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Loading initial data...");
 
-        Category bread = createCategoryIfNotFound("Bread", "Various types of European-style bread and croissants.");
         Category cake = createCategoryIfNotFound("Cake", "Birthday and celebration cakes.");
+        Category bread = createCategoryIfNotFound("Bread", "Various types of European-style bread and croissants.");
         Category brunch = createCategoryIfNotFound("Brunch", "Light meals and brunch items.");
         Category dessert = createCategoryIfNotFound("Dessert", "Mini cakes and sweet treats.");
         Category macaroon = createCategoryIfNotFound("Macaroon", "Specialty French-style macaroons.");

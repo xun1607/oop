@@ -2,6 +2,7 @@ package com.tiembanhngot.tiem_banh_online.controller;
 
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
 import com.tiembanhngot.tiem_banh_online.service.ProductService;
 
@@ -26,14 +28,23 @@ public class ProductPageController {
     @Autowired
     private ProductService productService;
 
+    // @GetMapping
+    // public String listProducts(Model model) { 
+    //     List<Product> products = productService.findAllAvailableProducts();
+    //     model.addAttribute("products", products);
+    //     model.addAttribute("currentPage", "products");
+    //     log.info("Rendering product list page with {} products", products.size());
+    //     return "product/list";
+    // }
     @GetMapping
-    public String listProducts(Model model) { 
-        List<Product> products = productService.findAllAvailableProducts();
-        model.addAttribute("products", products);
+    public String listProductsByCategory(Model model) {
+        Map<Category, List<Product>> productsByCategory = productService.getProductsGroupedByCategory();
+
+        model.addAttribute("productsByCategory", productsByCategory);
         model.addAttribute("currentPage", "products");
-        log.info("Rendering product list page with {} products", products.size());
         return "product/list";
     }
+
 
     @GetMapping("/{id}")
     public String productDetail(@PathVariable Long id, Model model) {
