@@ -18,7 +18,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -64,30 +63,35 @@ public class CartService {
         }
 
         CartDTO cart = getCart(session);
-        //tim sp
-        Product product = productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+        // tim sp
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
         // lay sp
         if (!Boolean.TRUE.equals(product.getIsAvailable())) {
             throw new IllegalArgumentException("Product '" + product.getName() + "' is currently unavailable.");
         }
         // lay gia sp
         if (product.getPrice() == null) {
-            throw new IllegalStateException("Product '" + product.getName() + "' has a pricing error. Please contact support.");
+            throw new IllegalStateException(
+                    "Product '" + product.getName() + "' has a pricing error. Please contact support.");
         }
         // tinh tong gia sp (bao gom chon size, so luong)
         BigDecimal priceToUse = product.getPrice();
         String sizeIdentifier = selectedSize;
 
-        if (StringUtils.hasText(selectedSize) && product.getSizeOptions() != null && !product.getSizeOptions().isEmpty()) {
+        if (StringUtils.hasText(selectedSize) && product.getSizeOptions() != null
+                && !product.getSizeOptions().isEmpty()) {
             if (product.getSizeOptions().containsKey(selectedSize)) {
                 priceToUse = product.getSizeOptions().get(selectedSize);
-                
+
                 if (priceToUse == null) {
                     log.error("Price for selected size '{}' of product ID {} is NULL.", selectedSize, productId);
-                    throw new IllegalStateException("Product '" + product.getName() + "' has a pricing error for the selected size.");
+                    throw new IllegalStateException(
+                            "Product '" + product.getName() + "' has a pricing error for the selected size.");
                 }
             } else {
-                log.warn("Invalid size '{}' selected for product ID {}. Using default price {}.", selectedSize, productId, product.getPrice());
+                log.warn("Invalid size '{}' selected for product ID {}. Using default price {}.", selectedSize,
+                        productId, product.getPrice());
                 sizeIdentifier = null;
                 priceToUse = product.getPrice();
                 if (priceToUse == null) {
@@ -112,7 +116,8 @@ public class CartService {
         CartItemDTO existingItem = cart.getItems().get(itemKey);
 
         if (existingItem != null) {
-            log.debug("Updating quantity for existing item with key {} (Product ID {}) in cart [Session: {}]. Old quantity: {}, Add quantity: {}",
+            log.debug(
+                    "Updating quantity for existing item with key {} (Product ID {}) in cart [Session: {}]. Old quantity: {}, Add quantity: {}",
                     itemKey, productId, session.getId(), existingItem.getQuantity(), quantity);
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
         } else {
@@ -130,7 +135,8 @@ public class CartService {
 
         updateCartTotals(cart);
 
-        log.info("Cart updated after adding/updating item with key {} (Product ID {}). Session ID: {}. Total items: {}, Total amount: {}",
+        log.info(
+                "Cart updated after adding/updating item with key {} (Product ID {}). Session ID: {}. Total items: {}, Total amount: {}",
                 itemKey, productId, session.getId(), cart.getTotalItems(), cart.getTotalAmount());
     }
 
@@ -139,7 +145,8 @@ public class CartService {
 
         String itemKeyToFind = productId + (StringUtils.hasText(selectedSize) ? "_" + selectedSize : "");
 
-        log.debug("Attempting to update quantity for item with key {} (Product ID: {}, Size: {}) to {} in cart [Session: {}].",
+        log.debug(
+                "Attempting to update quantity for item with key {} (Product ID: {}, Size: {}) to {} in cart [Session: {}].",
                 itemKeyToFind, productId, (selectedSize != null ? selectedSize : "N/A"), quantity, session.getId());
 
         CartItemDTO item = cart.getItems().get(itemKeyToFind);
@@ -149,18 +156,19 @@ public class CartService {
                 log.debug("Updating quantity for item with key {} to {}.", itemKeyToFind, quantity);
                 item.setQuantity(quantity);
             } else {
-                log.debug("Quantity for item with key {} is {} (<= 0). Removing item from cart.", itemKeyToFind, quantity);
+                log.debug("Quantity for item with key {} is {} (<= 0). Removing item from cart.", itemKeyToFind,
+                        quantity);
                 cart.getItems().remove(itemKeyToFind);
             }
             updateCartTotals(cart);
             log.info("Cart updated after quantity change for item with key {}. Total items: {}, Total amount: {}",
                     itemKeyToFind, cart.getTotalItems(), cart.getTotalAmount());
         } else {
-            log.warn("Attempted to update quantity for item with key {} (Product ID {}, Size: {}), but item was not found in cart [Session: {}].",
+            log.warn(
+                    "Attempted to update quantity for item with key {} (Product ID {}, Size: {}), but item was not found in cart [Session: {}].",
                     itemKeyToFind, productId, (selectedSize != null ? selectedSize : "N/A"), session.getId());
         }
     }
-
 
     public void removeItemById(Long productId, HttpSession session) {
         CartDTO cart = getCart(session);
@@ -169,39 +177,37 @@ public class CartService {
 
         if (removedItem != null) {
             log.debug("Successfully removed product ID {} from cart.", productId);
-            updateCartTotals(cart);  // xoa sp khoi cart va tinh lai tien
-          
+            updateCartTotals(cart); // xoa sp khoi cart va tinh lai tien
+
         } else {
             throw new IllegalArgumentException("Sản phẩm không tồn tại trong giỏ hàng để xóa.");
         }
     }
 
-    
     public void clearCart(HttpSession session) {
         log.info("Attempting to clear cart for session ID: {}", session.getId());
         if (session.getAttribute(CART_SESSION_KEY) != null) {
             session.removeAttribute(CART_SESSION_KEY);
             log.info("Cart attribute '{}' removed successfully for session ID: {}.", CART_SESSION_KEY, session.getId());
-          
+
             if (session.getAttribute(CART_SESSION_KEY) == null) {
-                 log.debug("Confirmed: Cart attribute '{}' is null after removal.", CART_SESSION_KEY);
+                log.debug("Confirmed: Cart attribute '{}' is null after removal.", CART_SESSION_KEY);
             } else {
-                 log.error("CRITICAL: Cart attribute '{}' STILL EXISTS after attempting removal for session ID: {}!", CART_SESSION_KEY, session.getId());
+                log.error("CRITICAL: Cart attribute '{}' STILL EXISTS after attempting removal for session ID: {}!",
+                        CART_SESSION_KEY, session.getId());
             }
         } else {
             log.warn("No cart attribute '{}' found in session ID {} to clear.", CART_SESSION_KEY, session.getId());
         }
     }
 
-  
-     public int getCartItemCount(HttpSession session) {
-         return getCart(session).getTotalItems();
-     }
+    public int getCartItemCount(HttpSession session) {
+        return getCart(session).getTotalItems();
+    }
 
     public BigDecimal getCartTotal(HttpSession session) {
         return getCart(session).getTotalAmount();
     }
-
 
     private void updateCartTotals(CartDTO cart) {
         if (cart == null) {
@@ -209,7 +215,7 @@ public class CartService {
             return;
         }
         log.debug("Recalculating totals for cart...");
-        
+
         BigDecimal calculatedTotalAmount = BigDecimal.ZERO;
         int calculatedTotalItems = 0;
 
@@ -217,17 +223,21 @@ public class CartService {
             for (CartItemDTO item : cart.getItems().values()) {
                 if (item != null && item.getPrice() != null && item.getQuantity() > 0) {
                     try {
-                        BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())); // gia ca * so luong
+                        BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())); // gia
+                                                                                                                 // ca *
+                                                                                                                 // so
+                                                                                                                 // luong
                         item.setLineTotal(lineTotal);
                         calculatedTotalAmount = calculatedTotalAmount.add(lineTotal);
                         calculatedTotalItems += item.getQuantity();
                     } catch (ArithmeticException e) {
-                         log.error("ArithmeticException for item productId: {}", item.getProductId(), e);
-                         item.setLineTotal(BigDecimal.ZERO);
+                        log.error("ArithmeticException for item productId: {}", item.getProductId(), e);
+                        item.setLineTotal(BigDecimal.ZERO);
                     }
                 } else {
                     log.warn("Skipping item total calculation due to invalid data: {}", item);
-                    if (item != null) item.setLineTotal(BigDecimal.ZERO);
+                    if (item != null)
+                        item.setLineTotal(BigDecimal.ZERO);
                 }
             }
         } else {
