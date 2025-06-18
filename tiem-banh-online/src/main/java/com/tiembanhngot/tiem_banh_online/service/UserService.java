@@ -40,7 +40,6 @@ public class UserService {
         if (userRepository.existsByEmail(userDto.getEmail())) {
             bindingResult.rejectValue("email", "email.exists", "Địa chỉ email này đã được sử dụng.");
         }
-
         // 2. Kiểm tra SĐT đã tồn tại chưa (nếu có nhập)
         if (StringUtils.hasText(userDto.getPhoneNumber()) &&
             userRepository.existsByPhoneNumber(userDto.getPhoneNumber()) ){
