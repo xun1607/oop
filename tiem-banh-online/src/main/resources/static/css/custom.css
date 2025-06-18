@@ -89,6 +89,16 @@ a:hover {
 .product-card .card-body { padding: 1rem; }
 .product-card .btn-outline-primary { border-color: #f18696; color: #bd1240; border-radius: 50px; font-size: 0.9rem; padding: 0.4rem 1rem; transition: all 0.3s ease; }
 .product-card .btn-outline-primary:hover { background-color: #d3445a; color: white; border-color: #FFB6C1; }
+.category-heading {
+    font-family: 'Roboto';
+    font-size: 2rem;
+    color: #a0522d;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    text-align: left;
+    border-bottom: 2px solid #f3e5ab;
+    padding-bottom: 0.3rem;
+}
 
 /* --- Product Detail --- */
 .product-detail-img { border-radius: 8px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 100%; height: auto; }
