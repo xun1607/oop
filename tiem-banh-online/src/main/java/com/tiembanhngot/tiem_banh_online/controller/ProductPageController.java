@@ -3,10 +3,16 @@ package com.tiembanhngot.tiem_banh_online.controller;
 <<<<<<< HEAD
 import java.util.List;
 
+<<<<<<< HEAD
 import org.springframework.beans.factory.annotation.Autowired;
 =======
 
 >>>>>>> origin/nnd
+=======
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+>>>>>>> origin/fix
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,8 +22,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.tiembanhngot.tiem_banh_online.entity.Product;
 import com.tiembanhngot.tiem_banh_online.service.ProductService;
+=======
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.service.ProductService;
+
+import lombok.extern.slf4j.Slf4j;
+
+>>>>>>> origin/fix
 
 import lombok.extern.slf4j.Slf4j;
 =======
@@ -32,7 +46,7 @@ public class ProductPageController {
     private ProductService productService;
 
     @GetMapping
-    public String listProducts(Model model) { // Thêm Model
+    public String listProducts(Model model) { 
         List<Product> products = productService.findAllAvailableProducts();
         model.addAttribute("products", products);
         model.addAttribute("currentPage", "products");
