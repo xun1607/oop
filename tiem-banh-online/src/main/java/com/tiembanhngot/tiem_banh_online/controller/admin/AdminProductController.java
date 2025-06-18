@@ -1,6 +1,11 @@
 package com.tiembanhngot.tiem_banh_online.controller.admin;
 
-import java.io.IOException;
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
+import com.tiembanhngot.tiem_banh_online.service.CategoryService;
+import com.tiembanhngot.tiem_banh_online.service.ProductService;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -12,22 +17,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.tiembanhngot.tiem_banh_online.entity.Product;
-import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
-import com.tiembanhngot.tiem_banh_online.service.CategoryService;
-import com.tiembanhngot.tiem_banh_online.service.ProductService;
-
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -67,7 +60,6 @@ public class AdminProductController {
         return "admin/product/list";
     }
 
-    // Hiển thị form thêm
     @GetMapping("/add")
     public String showAddProductForm(Model model) {
         model.addAttribute("product", new Product());
@@ -123,6 +115,7 @@ public class AdminProductController {
         boolean isNew = (product.getProductId() == null);
         String pageTitle = isNew ? "Thêm Sản Phẩm Mới" : "Chỉnh Sửa Sản Phẩm (ID: " + product.getProductId() + ")";
         model.addAttribute("pageTitle", pageTitle);
+        
         // Kiểm tra danh mục
         if (product.getCategory() == null || product.getCategory().getCategoryId() == null) {
             bindingResult.rejectValue("category", "NotEmpty.product.category", "Vui lòng chọn danh mục.");
@@ -137,19 +130,12 @@ public class AdminProductController {
         }
 
         try {
-            // Dùng ProductService để xử lý upload ảnh và lưu DB
             productService.saveProduct(product, imageFile);
             redirectAttributes.addFlashAttribute("successMessage",
                     (isNew ? "Đã thêm" : "Đã cập nhật") + " sản phẩm '" + product.getName() + "' thành công!");
             return "redirect:/admin/products";
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
 
->>>>>>> ec564f926ffa3f8949fc88a6bcbe14ae13c1b6f9
->>>>>>> main
         } catch (IOException e) {
             log.error("Admin: Lỗi lưu ảnh: {}", e.getMessage());
             model.addAttribute("errorMessage", "Lỗi lưu ảnh sản phẩm.");
@@ -158,9 +144,7 @@ public class AdminProductController {
 
         } catch (DataIntegrityViolationException e) {
             String message = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-            if (message.contains("slug")) {
-                bindingResult.rejectValue("slug", "duplicate.slug", "Slug đã tồn tại.");
-            } else if (message.contains("name")) {
+            if (message.contains("name")) {
                 bindingResult.rejectValue("name", "duplicate.name", "Tên sản phẩm đã tồn tại.");
             } else {
                 model.addAttribute("errorMessage", "Lỗi ràng buộc dữ liệu.");
