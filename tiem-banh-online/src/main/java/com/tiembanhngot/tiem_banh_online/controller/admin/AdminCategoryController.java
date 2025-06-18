@@ -33,7 +33,6 @@ public class AdminCategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    // Hiển thị danh sách category
     @GetMapping
     public String listCategories(
             @RequestParam(defaultValue = "0") int page,
