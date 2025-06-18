@@ -1,11 +1,6 @@
 package com.tiembanhngot.tiem_banh_online.controller.admin;
 
-import com.tiembanhngot.tiem_banh_online.entity.Product;
-import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
-import com.tiembanhngot.tiem_banh_online.service.CategoryService;
-import com.tiembanhngot.tiem_banh_online.service.ProductService;
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,10 +12,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.io.IOException;
+
+import com.tiembanhngot.tiem_banh_online.entity.Product;
+import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
+import com.tiembanhngot.tiem_banh_online.service.CategoryService;
+import com.tiembanhngot.tiem_banh_online.service.ProductService;
+
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -136,7 +143,13 @@ public class AdminProductController {
                     (isNew ? "Đã thêm" : "Đã cập nhật") + " sản phẩm '" + product.getName() + "' thành công!");
             return "redirect:/admin/products";
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 
+>>>>>>> ec564f926ffa3f8949fc88a6bcbe14ae13c1b6f9
+>>>>>>> main
         } catch (IOException e) {
             log.error("Admin: Lỗi lưu ảnh: {}", e.getMessage());
             model.addAttribute("errorMessage", "Lỗi lưu ảnh sản phẩm.");

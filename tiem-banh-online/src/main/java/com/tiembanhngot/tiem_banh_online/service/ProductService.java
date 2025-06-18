@@ -1,9 +1,11 @@
 package com.tiembanhngot.tiem_banh_online.service;
 
+
 import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
 import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -70,14 +72,15 @@ public class ProductService {
 
         try {
             return productRepository.save(product);
-        } catch (DataIntegrityViolationException e) {
+            } catch (DataIntegrityViolationException e) {
             String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
             if (msg.contains("name")) {
                 throw new DataIntegrityViolationException("Tên sản phẩm đã tồn tại.", e);
             }
             throw new RuntimeException("Lỗi khi lưu sản phẩm.", e);
-        }
+            }
     }
+    
 
     public Product updateProduct(Product product, MultipartFile image) throws IOException {
         Product existing = productRepository.findById(product.getProductId())
@@ -96,7 +99,6 @@ public class ProductService {
         } else {
             product.setImageUrl(existing.getImageUrl());
         }
-
         return productRepository.save(product);
     }
 
@@ -139,3 +141,4 @@ public class ProductService {
 
 
 }
+

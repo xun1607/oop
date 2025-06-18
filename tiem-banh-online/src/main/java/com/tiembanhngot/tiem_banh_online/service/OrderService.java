@@ -62,7 +62,7 @@ public class OrderService {
         order.setRecipientPhone(orderDto.getRecipientPhone());
         order.setShippingAddress(orderDto.getShippingAddress());
         order.setNotes(orderDto.getNotes());
-        order.setUser(currentUser);     
+        order.setUser(currentUser);
         order.setOrderCode("HD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         for (var cartItem : cart.getItemList()) {
@@ -78,9 +78,7 @@ public class OrderService {
             orderItem.setPriceAtPurchase(cartItem.getPrice()); 
             orderItem.setSizeAtPurchase(cartItem.getSelectedSize());
             order.addOrderItem(orderItem);
-            log.debug("Added OrderItem: ProductId={}, Qty={}, Price={}, Size={}",
-                      orderItem.getProduct().getProductId(), orderItem.getQuantity(),
-                      orderItem.getPriceAtPurchase(), orderItem.getSizeAtPurchase());
+            
         }
 
         order.setTotalAmount(cart.getTotalAmount());
@@ -90,8 +88,7 @@ public class OrderService {
         order.setPaymentStatus("UNPAID");
         
         Order savedOrder = orderRepository.save(order);
-        log.info("Order placed successfully with code: {}", savedOrder.getOrderCode());
-
+    
         // Gửi thông báo WebSocket cho Admin
         try {
             NewOrderNotificationDTO notification = new NewOrderNotificationDTO(
@@ -101,7 +98,7 @@ public class OrderService {
                 savedOrder.getFinalAmount()
             );
             messagingTemplate.convertAndSend("/topic/admin/new-orders", notification);
-            log.info("Sent new order WebSocket notification for order ID: {}", savedOrder.getOrderId());
+            
         } catch (Exception e) {
             log.error("Failed to send WebSocket notification for new order ID: {}", savedOrder.getOrderId(), e);
         }
@@ -118,32 +115,31 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Page<Order> findAllOrdersPaginated(Pageable pageable) {
         if (pageable.getSort().isUnsorted()) {
-             pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         }
         return orderRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Order> findOrdersFilteredAndPaginated(String status, Pageable pageable) {
-         log.debug("Admin: Fetching orders with filter (status='{}') and pagination: {}", status, pageable);
-         Specification<Order> spec = (root, query, cb) -> {
-             if (StringUtils.hasText(status)) {
-                 return cb.equal(root.get("status"), status);
-             }
-             return cb.conjunction(); 
-         };
-         if (pageable.getSort().isUnsorted()) {
-             pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-         }
-         return orderRepository.findAll(spec, pageable);
+        
+        Specification<Order> spec = (root, query, cb) -> {
+            if (StringUtils.hasText(status)) {
+                return cb.equal(root.get("status"), status);
+            }
+            return cb.conjunction();
+        };
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
+        return orderRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)
     public Optional<Order> findOrderDetailsById(Long id) {  //tim thong tin order bang id
-        log.debug("Admin: Fetching order details for ID: {}", id);
-         Optional<Order> orderOpt = orderRepository.findById(id);
-         orderOpt.ifPresent(order -> {
-         });
+        Optional<Order> orderOpt = orderRepository.findById(id);
+        orderOpt.ifPresent(order -> {
+        });
         return orderOpt;
     }
     
@@ -164,14 +160,12 @@ public class OrderService {
             case "DELIVERED":
                 if ("COD".equalsIgnoreCase(order.getPaymentMethod())) {
                     order.setPaymentStatus("PAID");
-                    log.info("Order ID {}: payment status set to PAID (COD).", orderId);
                 }
                 break;
 
             case "CANCELLED":
                 if ("PAID".equalsIgnoreCase(order.getPaymentStatus())) {
                     order.setPaymentStatus("REFUNDED");
-                    log.info("Order ID {}: payment status set to REFUNDED due to cancellation.", orderId);
                 } else {
                     log.info("Order ID {} cancelled with payment status {}.", orderId, order.getPaymentStatus());
                 }
@@ -179,7 +173,6 @@ public class OrderService {
         }
 
         Order updated = orderRepository.save(order);
-        log.info("Order ID {} updated to status {}. Payment status: {}", orderId, updated.getStatus(), updated.getPaymentStatus());
         return updated;
     }
 
@@ -196,11 +189,11 @@ public class OrderService {
         return true;
     }
 
-    // Các phương thức cho User 
+    // Các phương thức cho User
     @Transactional(readOnly = true)
     public Page<Order> findOrdersByUserPaginated(User user, Pageable pageable) {
         log.debug("Fetching orders for user ID: {} with pagination: {}", user.getUserId(), pageable);
-        return orderRepository.findByUser(user, pageable); // Đảm bảo method này có trong OrderRepository
+        return orderRepository.findByUser(user, pageable);
     }
     
     public long countTotalProducts() {

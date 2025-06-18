@@ -27,7 +27,7 @@
 
         <!-- Trường hợp giỏ hàng trống -->
         <div th:if="${cart == null or cart.itemList.isEmpty()}" class="alert alert-info text-center my-5">
-             <i class="bi bi-cart-x fs-1 d-block mb-3"></i>
+            <i class="bi bi-cart-x fs-1 d-block mb-3"></i>
             <p class="lead">Giỏ hàng của bạn hiện đang trống.</p>
             <a th:href="@{/products}" class="btn btn-primary"><i class="bi bi-arrow-left me-1"></i> Tiếp tục mua sắm</a>
         </div>
@@ -54,7 +54,7 @@
                                 <img th:src="@{${item.imageUrl ?: '/img/placeholder.png'}}" th:alt="${item.name}" class="img-thumbnail" style="max-height: 50px; max-width: 50px; object-fit: cover;">
                             </td>
                             <td>
-                                <!-- Sử dụng slug từ CartItemDTO để tạo link -->
+                            
                                 <a th:href="@{/products/{name}(name=${item.name})}" th:text="${item.name}" class="text-decoration-none product-link">Product Name</a>
                                 <!-- Thêm size -->
                                 <small class="d-block text-muted" th:if="${item.selectedSize != null}"
@@ -67,15 +67,14 @@
                                     <input type="hidden" name="productId" th:value="${item.productId}" />
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                     <input type="number" name="quantity" th:value="${item.quantity}" min="1" max="99" class="form-control form-control-sm text-center" style="width: 60px;" onchange="this.form.submit()">
-                                    <!-- Có thể thêm nút submit nếu không muốn submit tự động onchange -->
-                                    <!-- <button type="submit" class="btn btn-sm btn-outline-secondary ms-1"><i class="bi bi-check-lg"></i></button> -->
+                                
                                 </form>
                             </td>
                             <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(item.lineTotal, 0, 'COMMA', 0, 'POINT')} + ' ₫'">Line Total</td>
                             <td class="text-center">
-                                <!-- Form xóa item -->
+                                <!-- Form xóa sp khỏi giỏ -->
                                 <form th:action="@{/cart/remove/{id}(id=${item.productId})}" method="post" onsubmit="return confirm('Bạn chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?');">
-                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                     <button type="submit" class="btn btn-sm btn-link text-danger" title="Xóa sản phẩm">
                                         <i class="bi bi-trash3"></i>
                                     </button>
@@ -84,15 +83,15 @@
                         </tr>
                     </tbody>
                 </table>
-            </div> <!-- end table-responsive -->
+            </div>
 
             <!-- Tổng kết giỏ hàng và nút -->
             <div class="row justify-content-between mt-4 gy-3">
                 <!-- Nút tiếp tục mua hàng và xóa giỏ -->
-                 <div class="col-md-6 d-flex justify-content-start align-items-center">
-                     <a th:href="@{/products}" class="btn btn-outline-secondary me-2"><i class="bi bi-arrow-left me-1"></i> Tiếp tục mua hàng</a>
-                      <!-- Form xóa toàn bộ giỏ hàng -->
-                     <form th:action="@{/cart/clear}" method="post" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?');">
+                <div class="col-md-6 d-flex justify-content-start align-items-center">
+                    <a th:href="@{/products}" class="btn btn-outline-secondary me-2"><i class="bi bi-arrow-left me-1"></i> Tiếp tục mua hàng</a>
+                    <!-- Form xóa toàn bộ giỏ hàng -->
+                    <form th:action="@{/cart/clear}" method="post" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?');">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <button type="submit" class="btn btn-link text-danger btn-sm p-0">Xóa toàn bộ giỏ</button>
                     </form>
@@ -128,7 +127,7 @@
     <div th:replace="~{fragments/footer :: footer}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-     <!-- Thêm JS ở đây nếu cần xử lý AJAX cho giỏ hàng -->
-     <!-- <script th:src="@{/js/cart-ajax.js}"></script> -->
+    <!-- Thêm JS ở đây nếu cần xử lý AJAX cho giỏ hàng -->
+    <!-- <script th:src="@{/js/cart-ajax.js}"></script> -->
 </body>
 </html>

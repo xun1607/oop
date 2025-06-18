@@ -3,7 +3,6 @@ package com.tiembanhngot.tiem_banh_online.entity;
 import java.util.Objects;
 import java.util.Set;
 
-import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString; 
@@ -45,9 +45,9 @@ public class Category {
 
     @Override
     public int hashCode() {
-         if (categoryId != null){
+        if (categoryId != null){
             return Objects.hash(categoryId);
-         }
-         else return System.identityHashCode(this);
+        }
+        else return System.identityHashCode(this);
     }
 }
