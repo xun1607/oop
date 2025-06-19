@@ -26,7 +26,6 @@ import com.tiembanhngot.tiem_banh_online.exception.ProductNotFoundException;
 import com.tiembanhngot.tiem_banh_online.repository.OrderRepository;
 import com.tiembanhngot.tiem_banh_online.repository.ProductRepository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @lombok.Data 
@@ -40,7 +39,6 @@ class NewOrderNotificationDTO {
 }
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class OrderService {
 
@@ -89,7 +87,6 @@ public class OrderService {
         
         Order savedOrder = orderRepository.save(order);
     
-        // Gửi thông báo WebSocket cho Admin
         try {
             NewOrderNotificationDTO notification = new NewOrderNotificationDTO(
                 savedOrder.getOrderId(),
@@ -110,8 +107,6 @@ public class OrderService {
         return new BigDecimal("25000");
     }
 
-    // Các phương thức cho Admin 
-    // phan trang
     @Transactional(readOnly = true)
     public Page<Order> findAllOrdersPaginated(Pageable pageable) {
         if (pageable.getSort().isUnsorted()) {

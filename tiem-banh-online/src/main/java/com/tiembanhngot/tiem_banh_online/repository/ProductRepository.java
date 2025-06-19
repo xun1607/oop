@@ -8,23 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.tiembanhngot.tiem_banh_online.entity.Category;
 import com.tiembanhngot.tiem_banh_online.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    List<Product> findByCategory(Category category);
-    List<Product> findByCategoryAndIsAvailableTrue(Category category);
-    List<Product> findByIsAvailableTrueOrderByCreatedAtDesc();
-    List<Product> findByNameContainingIgnoreCaseAndIsAvailableTrue(String name);
-
     Optional<Product> findByName(String name);
-
+    List<Product> findByIsAvailableTrueOrderByCreatedAtDesc();
     boolean existsByCategoryCategoryId(Integer categoryId);
-    
-    List<Product> findByIsAvailableTrueAndNameContainingIgnoreCaseOrIsAvailableTrueAndDescriptionContainingIgnoreCaseOrderByNameAsc(String nameQuery, String descriptionQuery);
-    
+
     @Query("SELECT p FROM Product p WHERE p.isAvailable = true AND " +
         "(LOWER(p.name) LIKE LOWER(concat('%', :query, '%')) OR " +
         "LOWER(p.description) LIKE LOWER(concat('%', :query, '%'))) " +

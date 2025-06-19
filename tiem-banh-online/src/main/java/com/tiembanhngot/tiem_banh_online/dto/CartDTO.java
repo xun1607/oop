@@ -10,8 +10,6 @@ import lombok.Getter;
 @Getter
 @Data
 public class CartDTO {
-    // Class dai dien cho 1 Cart tam thoi
-    // LinkedHashMap de duy tri thu tu trong Cart
     private Map<String, CartItemDTO> items = new LinkedHashMap<>();
 
     private BigDecimal totalAmount = BigDecimal.ZERO;
