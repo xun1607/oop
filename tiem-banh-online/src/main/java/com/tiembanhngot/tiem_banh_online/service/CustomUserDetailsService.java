@@ -15,11 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tiembanhngot.tiem_banh_online.entity.User;
 import com.tiembanhngot.tiem_banh_online.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
-
 
 @Service
-@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
         @Autowired
         private UserRepository userRepository;
